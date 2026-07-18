@@ -46,12 +46,12 @@ let emailConfigured = false;
 function initMailer() {
   if (SMTP_USER && SMTP_PASS) {
     transporter = nodemailer.createTransport({
-      host:   'smtp.gmail.com',
-      port:    587,
-      secure:  false,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
-      tls: { rejectUnauthorized: false },
-    });
+  service: "gmail",
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS
+  }
+});
     emailConfigured = true;
     console.log(`📧  SMTP configured → ${SMTP_USER}`);
   } else {
