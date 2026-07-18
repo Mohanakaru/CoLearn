@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoLearn – Collaborative Study Suite</title>
+  <meta name="description" content="CoLearn is a real-time collaborative study platform. Create or join suites, share documents, draw on a shared whiteboard, and chat with your study group." />
+
+  <!-- Tailwind CSS (utility classes) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Brand stylesheet -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VIEW 1 – LOG IN
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="view-login" class="view active" style="background:var(--c-softblue);align-items:center;justify-content:center;padding:2rem 1rem;">
+  <div class="form-card">
+    <div class="brand-bar" style="border-radius:12px 12px 0 0;margin:-2.5rem -2rem 1.5rem;padding:1rem 1.5rem;">
+      <span>🔗 CoLearn</span>
+    </div>
+    <h2 style="font-size:1.5rem;font-weight:700;color:var(--c-charcoal);margin-bottom:1.4rem;text-align:center;">Log In</h2>
+
+    <div id="login-alert" class="hidden" style="margin-bottom:1rem;"></div>
+
+      <div class="form-group">
+        <div>
+          <label class="fs-label">Email Address</label>
+          <input id="login-email" type="email" class="fs-input" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div>
+          <label class="fs-label">Password</label>
+          <div style="position:relative;display:flex;align-items:center;">
+            <input id="login-password" type="password" class="fs-input" placeholder="••••••••" autocomplete="current-password" style="padding-right:2.8rem;flex:1;" />
+            <button
+              id="login-pw-toggle"
+              type="button"
+              aria-label="Toggle password visibility"
+              onclick="toggleLoginPassword()"
+              tabindex="0"
+              style="position:absolute;right:0.65rem;background:none;border:none;cursor:pointer;padding:0.25rem;color:var(--c-mutedgray);display:flex;align-items:center;justify-content:center;border-radius:4px;transition:color 0.2s;"
+              onmouseover="this.style.color='var(--c-blue)'"
+              onmouseout="this.style.color='var(--c-mutedgray)'"
+            >
+              <!-- Eye icon (visible) -->
+              <svg id="login-eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <!-- Eye-off icon (hidden by default) -->
+              <svg id="login-eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none;">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    <button class="btn-primary" style="width:100%;margin-top:1.4rem;" onclick="handleLogin()">Submit</button>
+
+    <div style="display:flex;justify-content:space-between;margin-top:1.1rem;font-size:0.87rem;">
+      <span style="color:var(--c-blue);font-weight:600;cursor:pointer;" onclick="navigate('view-signup')">New user</span>
+      <span style="color:var(--c-blue);font-weight:600;cursor:pointer;" onclick="navigate('view-forgot')">Forgot password</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VIEW 2 – SIGN UP
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="view-signup" class="view" style="background:var(--c-softblue);padding:2rem 1rem;">
+  <div style="width:100%;max-width:480px;margin:0 auto;">
+    <div class="brand-bar" style="border-radius:14px 14px 0 0;">
+      <span>🔗 CoLearn</span>
+    </div>
+    <div class="form-card" style="border-radius:0 0 18px 18px;border-top:none;max-width:100%;">
+      <h2 style="font-size:1.35rem;font-weight:700;color:var(--c-charcoal);margin-bottom:1.3rem;">Create Account</h2>
+      <div id="signup-alert" class="hidden" style="margin-bottom:1rem;"></div>
+
+      <div class="form-group">
+        <div>
+          <label class="fs-label">Name</label>
+          <input id="signup-name" type="text" class="fs-input" placeholder="Your full name" />
+        </div>
+        <div>
+          <label class="fs-label">Username</label>
+          <input id="signup-username" type="text" class="fs-input" placeholder="@username" />
+        </div>
+        <div>
+          <label class="fs-label">Email</label>
+          <input id="signup-email" type="email" class="fs-input" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="fs-label">Mobile</label>
+          <input id="signup-mobile" type="tel" class="fs-input" placeholder="+91 9876543210" />
+        </div>
+        <div>
+          <label class="fs-label">Gender</label>
+          <select id="signup-gender" class="fs-input" style="cursor:pointer;appearance:auto;">
+            <option value="" disabled selected>Select gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="nonbinary">Non-binary</option>
+            <option value="prefer-not">Prefer not to say</option>
+          </select>
+        </div>
+        <!-- Password -->
+        <div>
+          <label class="fs-label">Password</label>
+          <input id="signup-password" type="password" class="fs-input" placeholder="Min 8 chars, uppercase, number, symbol" oninput="checkPWStrength()" autocomplete="new-password" />
+          <div class="pw-strength-track"><div class="pw-strength-bar" id="pw-strength-bar" style="width:0%;"></div></div>
+          <span class="pw-strength-label" id="pw-strength-label"></span>
+        </div>
+        <!-- Confirm Password -->
+        <div>
+          <label class="fs-label">Confirm Password</label>
+          <input id="signup-confirm-password" type="password" class="fs-input" placeholder="Re-enter password" autocomplete="new-password" />
+        </div>
+        <!-- OTP section (hidden until Continue is clicked) -->
+        <div id="signup-otp-section" style="display:none;">
+          <label class="fs-label">Email OTP Verification</label>
+          <div class="input-row" style="margin-bottom:0.5rem;">
+            <input id="signup-otp" type="text" class="fs-input" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric" style="flex:1;" />
+            <button class="btn-teal" id="btn-send-otp" style="flex-shrink:0;" onclick="sendOTP()">Resend OTP</button>
+          </div>
+          <!-- Countdown (hidden until OTP sent) -->
+          <div class="otp-countdown-wrap" id="otp-countdown-wrap" style="display:none;">
+            <span style="white-space:nowrap;">⏱ OTP valid for</span>
+            <div class="otp-progress-track"><div class="otp-progress-bar" id="otp-progress-bar"></div></div>
+            <span class="otp-timer-text" id="otp-timer-text">300s</span>
+          </div>
+          <button class="btn-navy" id="btn-signup-submit" style="margin-top:0.8rem;" onclick="handleSignup()">Create Account</button>
+        </div>
+      </div>
+
+      <!-- Continue button (visible until OTP is sent) -->
+      <div id="signup-continue-section">
+        <button class="btn-navy" id="btn-signup-continue" style="margin-top:1.5rem;" onclick="handleSignupContinue()">Continue →</button>
+      </div>
+      <p style="text-align:center;margin-top:1rem;font-size:0.87rem;">
+        <span style="color:var(--c-slate);">Already have an account? </span>
+        <span style="color:var(--c-blue);font-weight:600;cursor:pointer;" onclick="navigate('view-login')">Log in</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VIEW 3 – FORGOT PASSWORD
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="view-forgot" class="view" style="background:var(--c-softblue);align-items:center;justify-content:center;padding:2rem 1rem;">
+  <div class="form-card">
+    <div class="brand-bar" style="border-radius:12px 12px 0 0;margin:-2.5rem -2rem 1.5rem;padding:1rem 1.5rem;">
+      <span>🔗 CoLearn</span>
+    </div>
+    <h2 style="font-size:1.35rem;font-weight:700;color:var(--c-charcoal);margin-bottom:0.4rem;">Forgot Password?</h2>
+    <p style="color:var(--c-slate);font-size:0.87rem;margin-bottom:1.4rem;">Enter your email to receive a reset OTP.</p>
+
+    <div id="forgot-alert" class="hidden" style="margin-bottom:1rem;"></div>
+
+    <!-- Step 1: Enter email -->
+    <div id="forgot-step1" class="form-group" style="display:block;">
+      <div>
+        <label class="fs-label">Linked Email Address</label>
+        <input id="forgot-email" type="email" class="fs-input" placeholder="you@example.com" />
+      </div>
+      <button id="btn-reset-request" class="btn-primary" onclick="sendResetOTP()">Request Reset Link</button>
+    </div>
+
+    <!-- Step 2: Verify OTP -->
+    <div id="forgot-step2" style="display:none;flex-direction:column;gap:0.9rem;margin-top:1rem;">
+      <p style="color:var(--c-slate);font-size:0.85rem;margin:0;">A 6-digit OTP was sent to your email. It expires in <strong>5 minutes</strong>.</p>
+      <div>
+        <label class="fs-label">OTP Code</label>
+        <input id="forgot-otp" type="text" class="fs-input" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric" />
+      </div>
+      <button id="btn-verify-otp" class="btn-primary" onclick="verifyResetStep()">Verify OTP</button>
+      <p style="text-align:center;font-size:0.83rem;margin-top:0.3rem;">
+        <span style="color:var(--c-blue);font-weight:600;cursor:pointer;" onclick="showForgotStep(1)">← Change email / Resend OTP</span>
+      </p>
+    </div>
+
+    <!-- Step 3: Set new password -->
+    <div id="forgot-step3" style="display:none;flex-direction:column;gap:0.9rem;margin-top:1rem;">
+      <p style="color:var(--c-slate);font-size:0.85rem;margin:0;">OTP verified ✅. Please choose a strong new password.</p>
+      <div>
+        <label class="fs-label">New Password</label>
+        <input id="forgot-newpw" type="password" class="fs-input" placeholder="Min 8 chars, uppercase, number, symbol" autocomplete="new-password" />
+      </div>
+      <div>
+        <label class="fs-label">Confirm New Password</label>
+        <input id="forgot-confirmpw" type="password" class="fs-input" placeholder="Re-enter new password" autocomplete="new-password" />
+      </div>
+      <button id="btn-reset-password" class="btn-primary" onclick="handleResetPassword()">Reset Password</button>
+    </div>
+
+    <p style="text-align:center;margin-top:1.2rem;font-size:0.87rem;">
+      <span style="color:var(--c-blue);font-weight:600;cursor:pointer;" onclick="navigate('view-login')">← Back to Login</span>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VIEW 4 – SUITE DASHBOARD
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="view-dashboard" class="view" style="background:var(--c-lightgray);">
+  <div class="brand-bar">
+    <span>🔗 CoLearn</span>
+    <div style="display:flex;gap:0.4rem;align-items:center;">
+      <span class="nav-link" onclick="showAbout()">About us</span>
+      <span class="nav-link" onclick="showProfile()">Profile</span>
+    </div>
+  </div>
+
+  <div style="flex:1;padding:1.5rem;max-width:1100px;margin:0 auto;width:100%;">
+    <div style="margin-bottom:1.3rem;">
+      <h1 style="font-size:1.6rem;font-weight:800;color:var(--c-charcoal);">Welcome back! 👋</h1>
+      <p style="color:var(--c-slate);font-size:0.9rem;margin-top:4px;">Jump into an existing suite or create a new one.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;" id="dashboard-grid">
+      <!-- LEFT: User's suites (loaded from Firestore) -->
+      <div class="action-block">
+        <div class="section-label">My Suites</div>
+        <!-- #suites-list is populated by loadUserSuites() in dashboard.js -->
+        <div id="suites-list" style="display:flex;flex-direction:column;gap:0.5rem;">
+          <!-- Populated dynamically after login. No mock data. -->
+          <div style="padding:2rem;text-align:center;color:var(--c-slate);font-size:0.88rem;">
+            Loading…
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Action blocks -->
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="action-block">
+          <div class="section-label">Create Suite</div>
+          <p style="color:var(--c-mutedgray);font-size:0.87rem;margin-bottom:0.9rem;">Set up a permanent collaborative workspace.</p>
+          <button class="btn-primary" style="width:100%;" onclick="openModal('modal-create-suite')">✨ Create New Suite</button>
+        </div>
+        <div class="action-block" style="border-color:#fff3cd;">
+          <div class="section-label" style="color:#856404;">Quick Suite</div>
+          <p style="color:#856404;font-size:0.82rem;margin-bottom:0.9rem;">⚡ Auto-deletes after this session</p>
+          <button class="btn-yellow" onclick="openModal('modal-quick-suite')">⚡ Create Quick Suite</button>
+        </div>
+        <div class="action-block">
+          <div class="section-label">Join Suite</div>
+          <p style="color:var(--c-mutedgray);font-size:0.87rem;margin-bottom:0.9rem;">Enter a suite code or invite link.</p>
+          <div class="input-row">
+            <input id="join-suite-code" type="text" class="fs-input" placeholder="Suite code or link" style="flex:1;" />
+            <button class="btn-primary" style="flex-shrink:0;" onclick="handleJoinSuite()">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     VIEW 6 – ACTIVE SUITE WORKSPACE
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="view-workspace" class="view">
+  <!-- Top bar -->
+  <div class="brand-bar">
+    <span>🔗 CoLearn</span>
+    <span id="ws-suite-name" style="font-size:0.95rem;font-weight:600;color:#dee2e6;background:rgba(255,255,255,0.1);padding:0.3rem 0.8rem;border-radius:8px;"></span>
+    <span id="ws-privacy-badge"></span>
+    <!-- Notification Bell -->
+    <div style="position:relative;margin-left:auto;" id="notification-bell-wrap">
+      <button id="btn-notification-bell" onclick="toggleNotificationPanel()" title="Notifications"
+        style="background:none;border:none;cursor:pointer;color:#dee2e6;font-size:1.35rem;padding:0.3rem;position:relative;transition:color 0.2s;"
+        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#dee2e6'">
+        🔔
+        <span id="notification-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--c-red);color:#fff;border-radius:50%;width:18px;height:18px;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;min-width:18px;">0</span>
+      </button>
+      <!-- Notification Dropdown -->
+      <div id="notification-dropdown" class="notification-dropdown hidden">
+        <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--c-divider);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-weight:700;font-size:0.9rem;color:var(--c-charcoal);">🔔 Notifications</span>
+          <button onclick="clearAllNotifications()" style="background:none;border:none;font-size:0.75rem;color:var(--c-blue);cursor:pointer;font-weight:600;">Clear all</button>
+        </div>
+        <div id="notification-list" style="max-height:320px;overflow-y:auto;">
+          <div style="padding:1.5rem;text-align:center;color:var(--c-slate);font-size:0.85rem;">No notifications</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="workspace-body">
+
+    <!-- ── Main viewport ──────────────────────────────────────── -->
+    <div class="workspace-main" id="ws-main">
+
+      <!-- STATE A: Invite / Home -->
+      <div id="ws-state-invite" style="display:block;">
+        <!-- Member grid -->
+        <div style="background:var(--c-white);border-radius:14px;border:1.5px solid var(--c-divider);padding:1.2rem;margin-bottom:1rem;box-shadow:var(--shadow-md);">
+          <div class="section-label">Suite Members</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div style="background:var(--c-lightgray);border-radius:9px;padding:0.6rem 0.8rem;font-size:0.85rem;color:var(--c-charcoal);">
+              <span style="font-weight:600;">Alex Johnson</span><br><span style="color:var(--c-slate);font-size:0.78rem;">@alexj · Host</span>
+            </div>
+            <div style="background:var(--c-lightgray);border-radius:9px;padding:0.6rem 0.8rem;font-size:0.85rem;color:var(--c-charcoal);">
+              <span style="font-weight:600;">Priya Sharma</span><br><span style="color:var(--c-slate);font-size:0.78rem;">@priyas</span>
+            </div>
+            <div style="background:var(--c-lightgray);border-radius:9px;padding:0.6rem 0.8rem;font-size:0.85rem;color:var(--c-charcoal);">
+              <span style="font-weight:600;">Marco Lee</span><br><span style="color:var(--c-slate);font-size:0.78rem;">@marcol</span>
+            </div>
+            <div id="ws-member4-info" style="display:none;background:var(--c-lightgreen);border-radius:9px;padding:0.6rem 0.8rem;font-size:0.85rem;border:1px solid #c3e6cb;">
+              <span style="font-weight:600;">Sam Chen</span><br><span style="color:#155724;font-size:0.78rem;">@samchen · Just joined</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invite link -->
+        <div style="background:var(--c-white);border-radius:14px;border:1.5px solid var(--c-divider);padding:1.2rem;margin-bottom:1rem;box-shadow:var(--shadow-md);">
+          <div class="section-label">Invite Link</div>
+          <div class="invite-link-box">
+            <span id="invite-link-text">https://CoLearn.local/join/FS-ABC7X92</span>
+            <button class="btn-teal" style="padding:0.35rem 0.75rem;font-size:0.8rem;flex-shrink:0;" onclick="copyInviteLink()">📋 Copy</button>
+          </div>
+        </div>
+
+        <!-- Google Drive Integration -->
+        <div style="background:var(--c-white);border-radius:14px;border:1.5px solid var(--c-divider);padding:1.2rem;box-shadow:var(--shadow-md);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
+            <div class="section-label" style="margin-bottom:0;">Google Drive Integration</div>
+            <span style="font-size:0.78rem;color:var(--c-green);font-weight:600;display:flex;align-items:center;gap:4px;">
+              <span style="width:8px;height:8px;background:var(--c-green);border-radius:50%;display:inline-block;animation:pulseSoft 2s infinite;"></span>
+              Syncing…
+            </span>
+          </div>
+          <div class="drive-folder">
+            <div style="display:flex;align-items:center;">
+              <span style="font-size:1.5rem;margin-right:0.7rem;">📄</span>
+              <div><div style="font-weight:600;font-size:0.9rem;color:var(--c-charcoal);">PDF Files</div><div style="font-size:0.78rem;color:var(--c-slate);">8 files synced</div></div>
+            </div>
+            <button class="btn-outline" onclick="linkDriveFile('PDF','Research_Paper_2026.pdf')">🔗 Link File</button>
+          </div>
+          <div class="drive-folder">
+            <div style="display:flex;align-items:center;">
+              <span style="font-size:1.5rem;margin-right:0.7rem;">📝</span>
+              <div><div style="font-weight:600;font-size:0.9rem;color:var(--c-charcoal);">DOCX Files</div><div style="font-size:0.78rem;color:var(--c-slate);">12 files synced</div></div>
+            </div>
+            <button class="btn-outline" onclick="linkDriveFile('DOCX','Lecture_Notes_Ch5.docx')">🔗 Link File</button>
+          </div>
+          <div class="drive-folder">
+            <div style="display:flex;align-items:center;">
+              <span style="font-size:1.5rem;margin-right:0.7rem;">📊</span>
+              <div><div style="font-weight:600;font-size:0.9rem;color:var(--c-charcoal);">PPTX Files</div><div style="font-size:0.78rem;color:var(--c-slate);">5 files synced</div></div>
+            </div>
+            <button class="btn-outline" onclick="linkDriveFile('PPTX','Presentation_Final.pptx')">🔗 Link File</button>
+          </div>
+          <div class="drive-folder" style="margin-bottom:0;">
+            <div style="display:flex;align-items:center;">
+              <span style="font-size:1.5rem;margin-right:0.7rem;">🖼️</span>
+              <div><div style="font-weight:600;font-size:0.9rem;color:var(--c-charcoal);">IMG Files</div><div style="font-size:0.78rem;color:var(--c-slate);">23 files synced</div></div>
+            </div>
+            <button class="btn-outline" onclick="linkDriveFile('IMG','Diagram_Circuit.png')">🔗 Link File</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE B: Docs Viewer -->
+      <div id="ws-state-docs" style="display:none;">
+        <!-- Mini video grid -->
+        <div style="background:var(--c-charcoal);border-radius:14px;padding:0.8rem;margin-bottom:1rem;">
+          <div class="section-label" style="color:#dee2e6;margin-bottom:0.6rem;">Participants</div>
+          <div class="video-grid">
+            <div class="video-slot"><div class="vid-avatar">A</div><div class="vid-label">Alex · Host</div></div>
+            <div class="video-slot"><div class="vid-avatar" style="background:linear-gradient(135deg,#17a2b8,#0f7a8c);">P</div><div class="vid-label">Priya</div></div>
+            <div class="video-slot"><div class="vid-avatar" style="background:linear-gradient(135deg,#28a745,#1e7e34);">M</div><div class="vid-label">Marco</div></div>
+            <div class="video-slot" id="vid-member4" style="display:none;"><div class="vid-avatar" style="background:linear-gradient(135deg,#ffc107,#d39e00);color:#212529;">S</div><div class="vid-label">Sam</div></div>
+          </div>
+        </div>
+        <!-- Document viewer -->
+        <div class="doc-viewer" id="doc-viewer-container">
+          <!-- Header: icon + filename + meta (updated dynamically) -->
+          <div id="doc-viewer-header" style="text-align:center;width:100%;">
+            <div id="doc-type-icon" style="font-size:3rem;margin-bottom:0.5rem;">📂</div>
+            <div id="doc-file-name" style="font-size:1rem;font-weight:700;color:var(--c-charcoal);">Select a document to view</div>
+            <div id="doc-file-meta" style="font-size:0.82rem;color:var(--c-slate);margin-top:4px;"></div>
+          </div>
+
+          <!-- Placeholder (shown when no file is open) -->
+          <div id="doc-viewer-placeholder" class="doc-skeleton" style="width:100%;text-align:center;padding:2rem;border:1.5px dashed var(--c-divider);border-radius:12px;margin-top:1rem;">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">☁️</div>
+            <div style="font-weight:600;color:var(--c-charcoal);margin-bottom:0.3rem;">No document open</div>
+            <div style="font-size:0.82rem;color:var(--c-slate);">Click the 👁️ button on any uploaded file to preview it here</div>
+          </div>
+
+          <!-- Page navigation (only relevant for multi-page docs, hidden for Drive) -->
+          <div id="doc-page-nav" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:0.8rem;display:none;">
+            <button class="btn-outline" onclick="changeDocPage(-1)">◀ Previous</button>
+            <span id="doc-page-indicator" style="font-size:0.87rem;color:var(--c-mutedgray);font-weight:600;">Page 1 of 5</span>
+            <button class="btn-outline" onclick="changeDocPage(1)">Next ▶</button>
+          </div>
+        </div>
+
+        <!-- Drive Connect Banner (shown when Drive not connected) -->
+        <div id="drive-connect-banner" style="display:none;flex-direction:column;align-items:center;gap:0.6rem;background:linear-gradient(135deg,#fff3cd,#ffeaa7);border:1.5px solid #ffc107;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem;">
+          <div style="font-size:1.3rem;">🔗</div>
+          <div style="font-weight:700;font-size:0.9rem;color:#856404;">Connect Google Drive to upload files</div>
+          <div style="font-size:0.8rem;color:#856404;">Your files will be stored in your own Google Drive — private and secure.</div>
+          <button id="btn-connect-drive" class="btn-primary" onclick="connectGoogleDrive()" style="font-size:0.82rem;padding:0.4rem 1rem;">🔗 Connect Google Drive</button>
+        </div>
+
+        <!-- Upload Document Section -->
+        <div style="background:var(--c-white);border-radius:14px;border:1.5px solid var(--c-divider);padding:1.2rem;margin-top:1rem;box-shadow:var(--shadow-md);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <div class="section-label" style="margin-bottom:0;">Documents</div>
+              <span id="drive-status-badge" style="font-size:0.75rem;font-weight:600;display:flex;align-items:center;gap:4px;"></span>
+            </div>
+            <button class="btn-primary" id="btn-upload-document" onclick="handleDocumentUpload()" style="font-size:0.82rem;padding:0.4rem 0.9rem;">➕ Upload Document</button>
+          </div>
+          <!-- Pending + Drive Documents List -->
+          <div id="pending-docs-list" style="display:flex;flex-direction:column;gap:0.5rem;">
+            <!-- Populated dynamically by document-service.js -->
+            <div id="pending-docs-empty" style="text-align:center;padding:1.5rem;color:var(--c-slate);font-size:0.85rem;border:1.5px dashed var(--c-divider);border-radius:10px;">
+              <div style="font-size:1.8rem;margin-bottom:0.4rem;">📂</div>
+              <div style="font-weight:600;">No documents uploaded yet</div>
+              <div style="font-size:0.78rem;margin-top:0.3rem;">Click "Upload Document" to add files from your Google Drive</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE C: Whiteboard -->
+      <div id="ws-state-whiteboard" style="display:none;">
+        <div style="background:var(--c-white);border-radius:14px;border:1.5px solid var(--c-divider);overflow:hidden;box-shadow:var(--shadow-md);">
+          <div style="background:var(--c-charcoal);padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;">
+            <span style="color:var(--c-white);font-weight:700;font-size:0.95rem;">🎨 Shared Whiteboard</span>
+            <span style="color:var(--c-slate);font-size:0.8rem;"><span style="color:var(--c-green);font-weight:600;">●</span> Live · 3 members</span>
+          </div>
+          <div style="background:#ffffff;position:relative;">
+            <canvas id="whiteboard-canvas" style="width:100%;display:block;touch-action:none;cursor:crosshair;"></canvas>
+          </div>
+          <!-- Toolbar -->
+          <div class="wb-toolbar">
+            <button class="wb-btn active" id="wb-btn-pen"    onclick="setWBTool('pen')">✏️ Pen</button>
+            <button class="wb-btn"        id="wb-btn-eraser" onclick="setWBTool('eraser')">🧹 Eraser</button>
+            <input type="color" class="wb-color-picker" id="wb-color" value="#212529" title="Color" onchange="updateWBColor(this.value)" />
+            <input type="number" class="wb-size-input" id="wb-size" value="4" min="1" max="40" title="Size" onchange="updateWBSize(this.value)" />
+            <div class="wb-divider"></div>
+            <button class="wb-btn" onclick="wbAction('clear')">🗑️ Clear</button>
+            <button class="wb-btn" onclick="wbAction('new')">📄 New</button>
+            <button class="wb-btn" onclick="wbAction('prev')">◀ Prev</button>
+            <button class="wb-btn" onclick="wbAction('next')">Next ▶</button>
+            <button class="wb-btn" onclick="wbAction('save')">💾 Save</button>
+            <span id="wb-page-label" style="color:#dee2e6;font-size:0.8rem;font-weight:600;margin-left:auto;">Page 1</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /workspace-main -->
+
+    <!-- ── Right Sidebar ──────────────────────────────────────── -->
+    <div class="workspace-sidebar" id="ws-sidebar">
+      <button class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+        <span id="sidebar-chevron">›</span>
+      </button>
+
+      <div style="padding:0.9rem;border-bottom:1px solid var(--c-divider);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <span style="font-weight:700;font-size:0.95rem;color:var(--c-charcoal);">Members</span>
+        <button class="btn-teal" style="font-size:0.78rem;padding:0.3rem 0.7rem;" onclick="showInviteModal()">+ Invite</button>
+      </div>
+
+      <div style="flex:1;overflow-y:auto;padding:0.7rem;" id="sidebar-members-list">
+        <div class="member-card">
+          <div class="member-avatar">A</div>
+          <div><div style="font-weight:600;font-size:0.85rem;color:var(--c-charcoal);">Alex Johnson</div><div style="font-size:0.75rem;color:var(--c-green);font-weight:500;">● Host</div></div>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#17a2b8,#0f7a8c);">P</div>
+          <div><div style="font-weight:600;font-size:0.85rem;color:var(--c-charcoal);">Priya Sharma</div><div style="font-size:0.75rem;color:var(--c-slate);">● Online</div></div>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#28a745,#1e7e34);">M</div>
+          <div><div style="font-weight:600;font-size:0.85rem;color:var(--c-charcoal);">Marco Lee</div><div style="font-size:0.75rem;color:var(--c-slate);">● Online</div></div>
+        </div>
+
+        <!-- Private suite join request -->
+        <div id="join-request-container" style="display:none;margin-top:0.6rem;">
+          <div class="section-label" style="color:#856404;">Pending Request</div>
+          <div class="join-request-badge">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--c-slate),var(--c-mutedgray));display:flex;align-items:center;justify-content:center;color:var(--c-white);font-size:0.8rem;font-weight:700;">S</div>
+              <div><div style="font-size:0.84rem;font-weight:700;color:#856404;">Sam Chen</div><div style="font-size:0.76rem;color:#856404;">@samchen wants to join</div></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn-green-sm" style="flex:1;" onclick="admitMember()">✓ Admit</button>
+              <button class="btn-red-sm"   style="flex:1;" onclick="rejectMember()">✕ Reject</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Member 4 (after admission) -->
+        <div class="member-card" id="member4-sidebar-card" style="display:none;border:1px solid #c3e6cb;background:var(--c-lightgreen);">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#ffc107,#d39e00);color:var(--c-charcoal);">S</div>
+          <div><div style="font-weight:600;font-size:0.85rem;color:var(--c-charcoal);">Sam Chen</div><div style="font-size:0.75rem;color:#155724;font-weight:500;">● Just joined</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Chat fly-out ────────────────────────────────────────── -->
+    <div class="chat-panel" id="chat-panel">
+      <div style="padding:0.9rem;border-bottom:1px solid var(--c-divider);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <span style="font-weight:700;font-size:0.95rem;color:var(--c-charcoal);">💬 Suite Chat</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <!-- Private Chat Toggle -->
+          <button id="btn-private-chat" onclick="togglePrivateChatPanel()" title="Private Messages"
+            style="background:none;border:1px solid var(--c-divider);border-radius:7px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.9rem;position:relative;transition:all 0.2s;"
+            onmouseover="this.style.borderColor='var(--c-blue)'" onmouseout="this.style.borderColor='var(--c-divider)'">
+            ✉️
+            <span id="pc-unread-badge" style="display:none;position:absolute;top:-5px;right:-5px;background:var(--c-red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:0.6rem;font-weight:700;align-items:center;justify-content:center;">0</span>
+          </button>
+          <button onclick="toggleChat()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--c-slate);">✕</button>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-bubble"><div class="chat-sender">Alex Johnson (Host)</div>Hey everyone! Welcome to the suite 👋</div>
+        <div class="chat-bubble"><div class="chat-sender">Priya Sharma</div>Thanks! Ready to study 📚</div>
+        <div class="chat-bubble"><div class="chat-sender">Marco Lee</div>Let's go! 💪</div>
+      </div>
+      <div style="padding:0.7rem;border-top:1px solid var(--c-divider);flex-shrink:0;">
+        <div class="input-row">
+          <input id="chat-input" type="text" class="fs-input" placeholder="Type a message…" style="flex:1;font-size:0.88rem;" onkeydown="if(event.key==='Enter')sendChatMessage()" />
+          <button class="btn-primary" style="flex-shrink:0;padding:0.5rem 0.9rem;" onclick="sendChatMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /workspace-body -->
+
+  <!-- ── Fixed Bottom Taskbar ───────────────────────────────────── -->
+  <div class="taskbar">
+    <button class="taskbar-btn" id="btn-mic" onclick="toggleMic()">
+      <span class="taskbar-icon">🎤</span>Mic
+    </button>
+    <button class="taskbar-btn" id="btn-cam" onclick="joinVideoCall()">
+      <span class="taskbar-icon">📹</span>Video
+    </button>
+    <button class="taskbar-btn" id="btn-screen-share" onclick="startScreenShare()">
+      <span class="taskbar-icon">📺</span>Screen
+    </button>
+    <div class="taskbar-divider"></div>
+    <button class="taskbar-btn" id="btn-docs" onclick="setWSState('docs')">
+      <span class="taskbar-icon">📄</span>Docs
+    </button>
+    <button class="taskbar-btn" id="btn-whiteboard" onclick="setWSState('whiteboard')">
+      <span class="taskbar-icon">🎨</span>Whiteboard
+    </button>
+    <button class="taskbar-btn" id="btn-chat" onclick="toggleChat()">
+      <span class="taskbar-icon">💬</span>Chat
+    </button>
+    <div class="taskbar-divider"></div>
+    <button class="taskbar-btn" onclick="setWSState('invite')">
+      <span class="taskbar-icon">🏠</span>Home
+    </button>
+    <button class="taskbar-btn tb-leave" onclick="leaveSuite()">
+      <span class="taskbar-icon">🚪</span>Leave
+    </button>
+  </div>
+
+  <!-- ── Video Call Overlay ─────────────────────────────────────── -->
+  <div id="video-call-overlay" class="media-overlay hidden">
+    <div class="media-overlay-header">
+      <span style="font-weight:700;font-size:1rem;">📹 Video Call</span>
+      <span id="vc-status" style="font-size:0.82rem;color:#adb5bd;">Connecting…</span>
+    </div>
+    <div id="vc-grid" class="vc-grid"></div>
+    <div class="media-overlay-controls">
+      <button class="vc-control-btn" id="vc-btn-mic" onclick="toggleVideoMic()" title="Toggle Microphone">
+        <span style="font-size:1.4rem;">🎤</span>
+        <span style="font-size:0.7rem;">Mic</span>
+      </button>
+      <button class="vc-control-btn" id="vc-btn-camera" onclick="toggleVideoCamera()" title="Toggle Camera">
+        <span style="font-size:1.4rem;">📹</span>
+        <span style="font-size:0.7rem;">Camera</span>
+      </button>
+      <button class="vc-control-btn vc-leave-btn" id="vc-btn-leave" onclick="leaveVideoCall()" title="Leave Video Call">
+        <span style="font-size:1.4rem;">🚪</span>
+        <span style="font-size:0.7rem;">Leave</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Screen Share Overlay (Viewer) ─────────────────────────── -->
+  <div id="screen-share-overlay" class="media-overlay hidden">
+    <div class="media-overlay-header">
+      <div style="display:flex;align-items:center;gap:0.6rem;">
+        <span class="live-badge">● LIVE</span>
+        <span id="ss-presenter-name" style="font-weight:700;font-size:1rem;">Screen Share</span>
+        <span style="font-size:0.82rem;color:#adb5bd;">is presenting</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span id="ss-resolution" style="font-size:0.75rem;color:#adb5bd;"></span>
+        <button id="btn-stop-screen-share" onclick="stopScreenShare()" class="vc-leave-btn vc-control-btn" style="display:none;">
+          <span style="font-size:1rem;">⏹</span><span style="font-size:0.7rem;">Stop</span>
+        </button>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;">
+      <video id="screen-share-video" autoplay playsinline style="max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;"></video>
+    </div>
+  </div>
+
+  <!-- ── Private Chat Panel ─────────────────────────────────────── -->
+  <div id="private-chat-panel" class="private-chat-panel hidden">
+    <div class="pc-header">
+      <span style="font-weight:700;font-size:0.95rem;color:var(--c-charcoal);">✉️ Private Messages</span>
+      <button onclick="closePrivateChatPanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--c-slate);">✕</button>
+    </div>
+    <div class="pc-body">
+      <!-- Conversation List -->
+      <div id="pc-conversation-list" class="pc-conv-list">
+        <div style="padding:1rem;text-align:center;color:var(--c-slate);font-size:0.85rem;">
+          <div style="font-size:1.5rem;margin-bottom:0.4rem;">✉️</div>
+          No conversations yet
+        </div>
+      </div>
+      <!-- Active Conversation -->
+      <div id="pc-active-conversation" class="pc-active-conv" style="display:none;">
+        <div class="pc-conv-header">
+          <button onclick="showConversationList()" style="background:none;border:none;cursor:pointer;color:var(--c-blue);font-size:0.85rem;font-weight:600;">← Back</button>
+          <span id="pc-peer-name" style="font-weight:700;font-size:0.9rem;color:var(--c-charcoal);"></span>
+          <span id="pc-peer-status" style="font-size:0.75rem;color:var(--c-green);"></span>
+        </div>
+        <div id="pc-messages" class="pc-messages"></div>
+        <div id="pc-typing-indicator" style="padding:0.3rem 0.8rem;font-size:0.75rem;color:var(--c-slate);height:1.2rem;"></div>
+        <!-- Reply preview -->
+        <div id="pc-reply-preview" style="display:none;padding:0.4rem 0.8rem;background:var(--c-softblue);border-left:3px solid var(--c-blue);margin:0 0.5rem;border-radius:0 6px 6px 0;font-size:0.78rem;color:var(--c-navy);">
+          <span id="pc-reply-text"></span>
+          <button onclick="clearReply()" style="float:right;background:none;border:none;cursor:pointer;color:var(--c-slate);font-size:0.8rem;">✕</button>
+        </div>
+        <!-- Emoji Picker -->
+        <div id="pc-emoji-picker" class="pc-emoji-picker hidden"></div>
+        <div style="padding:0.5rem;border-top:1px solid var(--c-divider);display:flex;gap:0.4rem;align-items:center;">
+          <button onclick="toggleEmojiPicker()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;padding:0.2rem;" title="Emoji">😊</button>
+          <input id="pc-message-input" type="text" class="fs-input" placeholder="Type a message…"
+            style="flex:1;font-size:0.85rem;padding:0.4rem 0.7rem;"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPrivateMessage();}"
+            oninput="handlePrivateTyping()" />
+          <button class="btn-primary" onclick="sendPrivateMessage()" style="padding:0.4rem 0.8rem;font-size:0.82rem;flex-shrink:0;">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Member Context Menu ────────────────────────────────────── -->
+  <div id="member-context-menu" class="context-menu hidden"></div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODALS
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Create Permanent Suite -->
+<div id="modal-create-suite" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">✨ Create New Suite</span>
+      <button class="modal-close" onclick="closeModal('modal-create-suite')">✕</button>
+    </div>
+    <div class="form-group">
+      <div>
+        <label class="fs-label">Suite Name</label>
+        <input id="cs-suite-name" type="text" class="fs-input" placeholder="e.g., Study Group Alpha" />
+      </div>
+      <div>
+        <label class="fs-label" style="margin-bottom:8px;">Private Suite</label>
+        <div class="toggle-wrap">
+          <button class="toggle-track" id="cs-private-toggle" onclick="toggleSwitch('cs-private-toggle','cs-private-label')">
+            <div class="toggle-thumb"></div>
+          </button>
+          <span id="cs-private-label" style="font-size:0.87rem;color:var(--c-mutedgray);font-weight:500;">No – Public (Direct join)</span>
+        </div>
+        <p id="cs-private-hint" style="color:var(--c-slate);font-size:0.78rem;margin-top:6px;">🔓 Anyone with the link can join directly.</p>
+      </div>
+      <div>
+        <label class="fs-label">Invite via Email or Username</label>
+        <input id="cs-invite" type="text" class="fs-input" placeholder="friend@example.com or @username" />
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:1.3rem;" onclick="createSuite('permanent')">Create</button>
+  </div>
+</div>
+
+<!-- Create Quick Suite -->
+<div id="modal-quick-suite" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">⚡ Quick Suite <span style="font-size:0.75rem;color:#856404;background:#fff3cd;padding:2px 8px;border-radius:6px;margin-left:6px;">Temporary</span></span>
+      <button class="modal-close" onclick="closeModal('modal-quick-suite')">✕</button>
+    </div>
+    <div class="form-group">
+      <div>
+        <label class="fs-label">Suite Name</label>
+        <input id="qs-suite-name" type="text" class="fs-input" placeholder="Quick session name" />
+      </div>
+      <div>
+        <label class="fs-label" style="margin-bottom:8px;">Access Type</label>
+        <label id="qs-opt-public" style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.65rem 0.9rem;background:var(--c-lightgray);border-radius:9px;border:1.5px solid #007bff;background:#e9f7fe;margin-bottom:0.5rem;">
+          <input type="radio" name="qs-access" value="public" checked onchange="updateQSOption()" style="accent-color:var(--c-blue);" />
+          <div><div style="font-weight:600;font-size:0.88rem;color:var(--c-charcoal);">🔓 Direct link join (Public)</div><div style="font-size:0.77rem;color:var(--c-slate);">Anyone with the link joins immediately</div></div>
+        </label>
+        <label id="qs-opt-private" style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.65rem 0.9rem;background:var(--c-lightgray);border-radius:9px;border:1.5px solid var(--c-divider);">
+          <input type="radio" name="qs-access" value="private" onchange="updateQSOption()" style="accent-color:var(--c-blue);" />
+          <div><div style="font-weight:600;font-size:0.88rem;color:var(--c-charcoal);">🔒 Admit approval required (Private)</div><div style="font-size:0.77rem;color:var(--c-slate);">Host must approve join requests</div></div>
+        </label>
+      </div>
+    </div>
+    <button class="btn-yellow" style="margin-top:1.3rem;" onclick="createSuite('quick')">Create Quick Suite</button>
+  </div>
+</div>
+
+<!-- About Us -->
+<div id="modal-about" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:500px;">
+    <div class="modal-header">
+      <span class="modal-title">🔗 About CoLearn</span>
+      <button class="modal-close" onclick="closeModal('modal-about')">✕</button>
+    </div>
+    <div style="color:var(--c-mutedgray);font-size:0.9rem;line-height:1.7;">
+      <p style="margin-bottom:0.8rem;"><strong style="color:var(--c-blue);">CoLearn</strong> is a real-time collaborative study platform built to help students connect, share resources, and work together seamlessly.</p>
+      <p style="margin-bottom:0.8rem;">✨ Permanent &amp; temporary study suites<br>📄 Document viewer with page navigation<br>🎨 Shared whiteboard canvas<br>💬 Real-time chat<br>☁️ Google Drive asset integration</p>
+      <p style="color:var(--c-slate);font-size:0.82rem;">Version 2.0.0 · Built for Protothon 2026</p>
+    </div>
+  </div>
+</div>
+
+<!-- Profile -->
+<div id="modal-profile" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-header">
+      <span class="modal-title">👤 Profile</span>
+      <button class="modal-close" onclick="closeModal('modal-profile')">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--c-lightgray);border-radius:12px;margin-bottom:1rem;">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--c-blue),var(--c-teal));display:flex;align-items:center;justify-content:center;color:var(--c-white);font-size:1.5rem;font-weight:700;">
+        <span id="profile-initial">U</span>
+      </div>
+      <div>
+        <div style="font-weight:700;color:var(--c-charcoal);" id="profile-name-display">User</div>
+        <div style="color:var(--c-slate);font-size:0.85rem;" id="profile-email-display">user@example.com</div>
+      </div>
+    </div>
+    <button class="btn-danger" style="width:100%;" onclick="handleLogout()">🚪 Log Out</button>
+  </div>
+</div>
+
+<!-- Invite from Workspace -->
+<div id="modal-ws-invite" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">✉️ Invite to Suite</span>
+      <button class="modal-close" onclick="closeModal('modal-ws-invite')">✕</button>
+    </div>
+
+    <!-- Step 1: Generated code + link (always visible) -->
+    <div id="invite-info-panel" style="display:none;margin-bottom:1rem;">
+      <div style="background:var(--c-charcoal);border-radius:12px;padding:1rem;text-align:center;margin-bottom:0.8rem;">
+        <div style="font-size:11px;font-weight:600;color:#adb5bd;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">5-Digit Invite Code</div>
+        <div id="invite-code-display" style="font-size:2.4rem;font-weight:800;letter-spacing:0.3em;color:#ffffff;font-family:monospace;">─ ─ ─ ─ ─</div>
+      </div>
+      <div class="invite-link-box" style="margin-bottom:0.8rem;">
+        <span id="invite-link-display" style="font-size:0.78rem;color:var(--c-blue);word-break:break-all;">Generating…</span>
+        <button class="btn-teal" style="padding:0.3rem 0.7rem;font-size:0.78rem;flex-shrink:0;" onclick="copyInviteLink()">📋 Copy</button>
+      </div>
+      <div style="font-size:0.78rem;color:var(--c-slate);background:var(--c-lightgray);border-radius:8px;padding:0.6rem 0.8rem;">
+        ⚠️ This code is valid only while you (the host) are online.
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div id="invite-divider" style="display:none;display:flex;align-items:center;gap:0.75rem;margin:0.8rem 0;">
+      <div style="flex:1;height:1px;background:var(--c-divider);"></div>
+      <span style="font-size:0.78rem;color:var(--c-mutedgray);font-weight:600;">SEND VIA EMAIL</span>
+      <div style="flex:1;height:1px;background:var(--c-divider);"></div>
+    </div>
+
+    <!-- Step 2: Email form -->
+    <div id="invite-email-form">
+      <label class="fs-label" style="margin-bottom:6px;">Recipient Email</label>
+      <input id="invite-email-input" type="email" class="fs-input"
+             placeholder="friend@example.com"
+             style="margin-bottom:0.8rem;"
+             onkeydown="if(event.key==='Enter') handleSendInviteEmail()" />
+
+      <!-- Status messages -->
+      <div id="invite-email-alert" class="hidden" style="margin-bottom:0.8rem;"></div>
+
+      <button id="btn-send-invite" class="btn-primary" style="width:100%;"
+              onclick="handleSendInviteEmail()">
+        📨 Send Invitation
+      </button>
+    </div>
+
+    <!-- Loading state -->
+    <div id="invite-loading" style="display:none;text-align:center;padding:0.8rem;color:var(--c-slate);font-size:0.9rem;">
+      ⏳ Sending invitation…
+    </div>
+
+    <!-- Loading spinner for generating code -->
+    <div id="invite-generating" style="display:none;text-align:center;padding:1rem;color:var(--c-slate);font-size:0.9rem;">
+      ⏳ Generating invite code…
+    </div>
+  </div>
+</div>
+
+<!-- Screen Share Busy Modal -->
+<div id="modal-screen-share-busy" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:400px;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:0.8rem;">📺</div>
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--c-charcoal);margin-bottom:0.5rem;">
+      <span id="ss-busy-presenter">Someone</span> is presenting
+    </h3>
+    <p style="color:var(--c-slate);font-size:0.88rem;margin-bottom:1.3rem;">Only one screen share is allowed at a time. Wait for them to stop sharing.</p>
+    <button class="btn-primary" onclick="closeModal('modal-screen-share-busy')" style="width:100%;">Got it</button>
+  </div>
+</div>
+
+<!-- Remove Member Confirmation Modal -->
+<div id="modal-remove-member" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-header">
+      <span class="modal-title">⚠️ Remove Member</span>
+      <button class="modal-close" onclick="closeModal('modal-remove-member')">✕</button>
+    </div>
+    <p style="color:var(--c-mutedgray);font-size:0.9rem;margin-bottom:1.3rem;">
+      Remove <strong id="remove-member-name">this member</strong> from the suite?
+      They will lose access immediately.
+    </p>
+    <div style="display:flex;gap:0.7rem;">
+      <button class="btn-outline" onclick="closeModal('modal-remove-member')" style="flex:1;">Cancel</button>
+      <button class="btn-danger" id="btn-confirm-remove-member" onclick="confirmRemoveMember()" style="flex:1;">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TOAST NOTIFICATIONS
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="main-toast" class="toast">
+  <div class="toast-inner">
+    <span id="main-toast-text">Notification</span>
+  </div>
+</div>
+<div id="copy-toast" class="toast">
+  <div class="toast-inner green">✓ Invite link copied to clipboard!</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT – load order matters
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Firebase Client SDK (compat v9 – works with window.firebase.*) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<!-- Firebase Client SDK init (after config + state are loaded) -->
+<script src="js/firebase-client.js"></script>
+<script src="js/whiteboard.js"></script>
+<!-- Shared WebRTC Infrastructure (must load before voice/video/screen) -->
+<script src="js/webrtc-manager.js"></script>
+<!-- Voice (WebRTC) module -->
+<script src="js/voice.js"></script>
+<!-- Video Call module -->
+<script src="js/video-call.js"></script>
+<!-- Screen Share module -->
+<script src="js/screen-share.js"></script>
+<!-- Notifications -->
+<script src="js/notifications.js"></script>
+<!-- Private Chat -->
+<script src="js/private-chat.js"></script>
+<!-- Document Service -->
+<script src="js/document-service.js"></script>
+<!-- Member Context Menu -->
+<script src="js/member-context-menu.js"></script>
+<script src="js/views/login.js"></script>
+<script src="js/views/signup.js"></script>
+<script src="js/views/forgot.js"></script>
+<script src="js/views/dashboard.js"></script>
+<script src="js/views/workspace.js"></script>
+<script src="js/invite.js"></script>
+<!-- Router last (sets up keyboard shortcuts after all handlers are defined) -->
+<script src="js/router.js"></script>
+
+</body>
+</html>

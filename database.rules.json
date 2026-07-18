@@ -1,0 +1,63 @@
+{
+  "rules": {
+    "suites": {
+      "$suiteId": {
+        /* ── Voice signaling (Perfect Negotiation) ───────────── */
+        "voiceSignaling": {
+          ".read":  "auth != null",
+          ".write": "auth != null"
+        },
+
+        /* ── Video call signaling ──────────────────────────── */
+        "videoSignaling": {
+          ".read":  "auth != null",
+          ".write": "auth != null"
+        },
+
+        /* ── Screen share signaling ───────────────────────── */
+        "screenSignaling": {
+          ".read":  "auth != null",
+          ".write": "auth != null"
+        },
+
+        /* ── Active screen share presence ─────────────────── */
+        "screenShare": {
+          "active": {
+            ".read":  "auth != null",
+            ".write": "auth != null"
+          }
+        },
+
+        /* ── Member removed event (ephemeral) ─────────────── */
+        "memberRemoved": {
+          ".read":  "auth != null",
+          ".write": "auth != null"
+        },
+
+        /* ── Whiteboard strokes ────────────────────────────── */
+        "whiteboard": {
+          ".read":  "auth != null",
+          ".write": "auth != null"
+        }
+      }
+    },
+
+    /* ── Private chat typing indicators ─────────────────────── */
+    "privateTyping": {
+      "$convId": {
+        "$uid": {
+          /* Each user can only write their own typing status;
+             any authenticated user can read (to show indicator) */
+          ".read":  "auth != null",
+          ".write": "auth != null && auth.uid == $uid"
+        }
+      }
+    },
+
+    /* ── Deny all other paths ────────────────────────────────── */
+    "$other": {
+      ".read":  false,
+      ".write": false
+    }
+  }
+}

@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoLearn – Collaborative Study Suite</title>
+  <meta name="description" content="CoLearn is a real-time collaborative study platform. Create or join suites, share documents, whiteboard together, and stay connected with your study group." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              softblue:  '#e9f7fe',
+              blue:      '#007bff',
+              navy:      '#004085',
+              charcoal:  '#212529',
+              darkgray:  '#343a40',
+              mutedgray: '#495057',
+              divider:   '#dee2e6',
+              slate:     '#6c757d',
+              lightgray: '#f8f9fa',
+              green:     '#28a745',
+              lightgreen:'#d4edda',
+              yellow:    '#ffc107',
+              paleyellow:'#fff3cd',
+              red:       '#dc3545',
+              lightred:  '#f8d7da',
+              teal:      '#17a2b8',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'slide-in-right': 'slideInRight 0.35s ease-out',
+            'slide-out-right':'slideOutRight 0.3s ease-in forwards',
+            'fade-in':        'fadeIn 0.3s ease-out',
+            'fade-in-up':     'fadeInUp 0.4s ease-out',
+            'pulse-soft':     'pulseSoft 2s infinite',
+            'bounce-soft':    'bounceSoft 0.6s ease',
+          },
+          keyframes: {
+            slideInRight:  { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+            slideOutRight: { from: { transform: 'translateX(0)' },    to: { transform: 'translateX(100%)' } },
+            fadeIn:        { from: { opacity: 0 },                    to: { opacity: 1 } },
+            fadeInUp:      { from: { opacity: 0, transform: 'translateY(20px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+            pulseSoft:     { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.6 } },
+            bounceSoft:    { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.05)' } },
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Base resets ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: 'Inter', sans-serif; }
+    body { background: #e9f7fe; overflow-x: hidden; }
+
+    /* ── Smooth page transitions ─────────────────────────────── */
+    .view { display: none; opacity: 0; transition: opacity 0.3s ease; }
+    .view.active { display: flex; flex-direction: column; opacity: 1; animation: fadeInUp 0.4s ease-out; min-height: 100vh; }
+
+    /* ── Scrollbar styling ───────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #007bff55; border-radius: 10px; }
+
+    /* ── Brand header bar ────────────────────────────────────── */
+    .brand-bar {
+      background: #212529;
+      color: #ffffff;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      z-index: 50;
+    }
+
+    /* ── Form card ───────────────────────────────────────────── */
+    .form-card {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1.5px solid #dee2e6;
+      box-shadow: 0 8px 40px rgba(0,123,255,0.10), 0 2px 12px rgba(0,0,0,0.06);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* ── Inputs ──────────────────────────────────────────────── */
+    .fs-input {
+      background: #f8f9fa;
+      border: 1.5px solid #dee2e6;
+      border-radius: 10px;
+      padding: 0.65rem 0.9rem;
+      width: 100%;
+      font-size: 0.95rem;
+      color: #212529;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .fs-input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+    }
+    .fs-input::placeholder { color: #6c757d; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, #007bff, #0056c7);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.7rem 1.4rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow: 0 4px 14px rgba(0,123,255,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,123,255,0.45); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-navy {
+      background: linear-gradient(135deg, #004085, #003268);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.7rem 1.4rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0,64,133,0.35);
+      width: 100%;
+    }
+    .btn-navy:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,64,133,0.45); }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #dc3545, #b02030);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(220,53,69,0.35);
+    }
+    .btn-danger:hover { transform: translateY(-1px); }
+
+    .btn-teal {
+      background: linear-gradient(135deg, #17a2b8, #117a8b);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+      font-size: 0.88rem;
+    }
+    .btn-teal:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(23,162,184,0.4); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid #007bff;
+      color: #007bff;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.88rem;
+    }
+    .btn-outline:hover { background: #007bff; color: #fff; }
+
+    .btn-green {
+      background: linear-gradient(135deg, #28a745, #1e7e34);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: transform 0.15s;
+    }
+    .btn-green:hover { transform: translateY(-1px); }
+
+    .btn-red-sm {
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: opacity 0.2s;
+    }
+    .btn-red-sm:hover { opacity: 0.88; }
+
+    .btn-green-sm {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: opacity 0.2s;
+    }
+    .btn-green-sm:hover { opacity: 0.88; }
+
+    /* ── Alert banners ────────────────────────────────────────── */
+    .alert-success {
+      background: #d4edda; color: #155724;
+      border: 1px solid #c3e6cb; border-radius: 10px;
+      padding: 0.8rem 1.1rem; font-size: 0.9rem;
+      animation: fadeInUp 0.3s ease-out;
+    }
+    .alert-error {
+      background: #f8d7da; color: #721c24;
+      border: 1px solid #f5c6cb; border-radius: 10px;
+      padding: 0.8rem 1.1rem; font-size: 0.9rem;
+      animation: fadeInUp 0.3s ease-out;
+    }
+    .alert-info {
+      background: #e9f7fe; color: #004085;
+      border: 1px solid #b8daff; border-radius: 10px;
+      padding: 0.8rem 1.1rem; font-size: 0.9rem;
+    }
+
+    /* ── Suite button (dashboard) ─────────────────────────────── */
+    .suite-btn {
+      background: #ffffff;
+      border: 1.5px solid #dee2e6;
+      border-radius: 12px;
+      padding: 0.85rem 1.2rem;
+      width: 100%;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.93rem;
+      color: #212529;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .suite-btn:hover {
+      border-color: #007bff;
+      background: linear-gradient(135deg, #e9f7fe, #ffffff);
+      transform: translateX(3px);
+      box-shadow: 0 4px 16px rgba(0,123,255,0.15);
+    }
+    .suite-btn .suite-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, #007bff22, #007bff44);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+
+    /* ── Dashboard action blocks ─────────────────────────────── */
+    .action-block {
+      background: #ffffff;
+      border: 1.5px solid #dee2e6;
+      border-radius: 14px;
+      padding: 1.3rem 1.2rem;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s;
+    }
+    .action-block:hover { box-shadow: 0 6px 24px rgba(0,123,255,0.12); }
+
+    /* ── Toggle switch ───────────────────────────────────────── */
+    .toggle-wrap { display: flex; align-items: center; gap: 0.7rem; }
+    .toggle-track {
+      width: 52px; height: 28px; border-radius: 14px;
+      background: #dee2e6; position: relative; cursor: pointer;
+      transition: background 0.3s; flex-shrink: 0; border: none;
+      padding: 0;
+    }
+    .toggle-track.on { background: #007bff; }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #fff; transition: transform 0.3s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(24px); }
+
+    /* ── Modal overlay ───────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(33,37,41,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: #fff; border-radius: 18px;
+      padding: 2rem 1.8rem; width: 90%; max-width: 460px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.35s ease-out;
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    /* ── Workspace layout ────────────────────────────────────── */
+    #view-workspace {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #view-workspace.active {
+      display: flex;
+      opacity: 1;
+      min-height: unset;
+    }
+    .workspace-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    .workspace-main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.2rem;
+      transition: margin-right 0.3s ease;
+    }
+    .workspace-sidebar {
+      width: 260px;
+      background: #ffffff;
+      border-left: 1.5px solid #dee2e6;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease, opacity 0.3s ease;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .workspace-sidebar.collapsed { width: 0; opacity: 0; border-left: none; }
+
+    /* ── Bottom taskbar ──────────────────────────────────────── */
+    .taskbar {
+      background: #212529;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.75rem 1rem;
+      flex-shrink: 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+      flex-wrap: wrap;
+    }
+    .taskbar-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: #343a40;
+      border: 1px solid #495057;
+      border-radius: 10px;
+      padding: 0.55rem 0.85rem;
+      color: #f8f9fa;
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      min-width: 56px;
+    }
+    .taskbar-btn:hover { background: #495057; transform: translateY(-2px); }
+    .taskbar-btn.active-tool { background: linear-gradient(135deg, #007bff, #0056c7); border-color: #007bff; }
+    .taskbar-btn.muted { background: #6c757d; border-color: #495057; }
+    .taskbar-btn.leave {
+      background: linear-gradient(135deg, #dc3545, #b02030);
+      border-color: #dc3545;
+      color: #fff;
+    }
+    .taskbar-btn.leave:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(220,53,69,0.5); }
+    .taskbar-icon { font-size: 1.2rem; line-height: 1; }
+
+    /* ── Sidebar toggle button ───────────────────────────────── */
+    .sidebar-toggle {
+      position: absolute; top: 50%; right: 0;
+      transform: translateY(-50%);
+      z-index: 10;
+      background: #007bff;
+      color: #fff; border: none;
+      border-radius: 8px 0 0 8px;
+      width: 22px; height: 60px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+      transition: background 0.2s;
+    }
+    .sidebar-toggle:hover { background: #0056c7; }
+
+    /* ── Member card ─────────────────────────────────────────── */
+    .member-card {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 0.65rem 0.8rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 0.5rem;
+      animation: fadeInUp 0.3s ease-out;
+    }
+    .member-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #007bff, #17a2b8);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Video grid ──────────────────────────────────────────── */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.6rem;
+    }
+    .video-slot {
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #212529, #343a40);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      border: 2px solid #495057;
+    }
+    .video-slot .vid-label {
+      position: absolute; bottom: 6px; left: 8px;
+      background: rgba(0,0,0,0.6); color: #fff;
+      font-size: 0.72rem; padding: 2px 7px; border-radius: 6px;
+      font-weight: 600;
+    }
+    .video-slot .vid-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #007bff, #17a2b8);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.1rem; font-weight: 700;
+    }
+
+    /* ── Whiteboard canvas ───────────────────────────────────── */
+    #whiteboard-canvas {
+      cursor: crosshair;
+      display: block;
+      border-radius: 0;
+      touch-action: none;
+    }
+    .wb-toolbar {
+      background: #343a40;
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.8rem; flex-wrap: wrap;
+      border-top: 2px solid #007bff;
+    }
+    .wb-btn {
+      background: #495057; color: #f8f9fa;
+      border: none; border-radius: 7px;
+      padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 4px;
+    }
+    .wb-btn:hover { background: #6c757d; transform: translateY(-1px); }
+    .wb-btn.active { background: #007bff; }
+    .wb-color-picker {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid #fff; cursor: pointer; overflow: hidden;
+    }
+    .wb-size-input {
+      width: 50px; background: #495057; color: #fff;
+      border: 1px solid #6c757d; border-radius: 6px;
+      padding: 0.3rem 0.4rem; font-size: 0.82rem; text-align: center;
+    }
+
+    /* ── Drive integration ───────────────────────────────────── */
+    .drive-folder {
+      background: #ffffff;
+      border: 1.5px solid #dee2e6;
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.6rem;
+      transition: all 0.2s;
+    }
+    .drive-folder:hover { border-color: #007bff; box-shadow: 0 4px 14px rgba(0,123,255,0.1); }
+    .drive-folder-icon { font-size: 1.5rem; margin-right: 0.7rem; }
+
+    /* ── Chat fly-out ────────────────────────────────────────── */
+    .chat-panel {
+      position: absolute; right: 0; top: 0; bottom: 0;
+      width: 300px; background: #ffffff;
+      border-left: 1.5px solid #dee2e6;
+      display: flex; flex-direction: column;
+      z-index: 40;
+      transform: translateX(0);
+      transition: transform 0.3s ease;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    }
+    .chat-panel.hidden { transform: translateX(100%); }
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 0.8rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .chat-bubble {
+      background: #e9f7fe; border-radius: 12px 12px 12px 4px;
+      padding: 0.5rem 0.8rem; max-width: 85%; font-size: 0.85rem; color: #212529;
+      animation: fadeInUp 0.25s ease-out;
+    }
+    .chat-bubble.own {
+      background: linear-gradient(135deg, #007bff, #0056c7);
+      color: #fff; border-radius: 12px 12px 4px 12px;
+      align-self: flex-end;
+    }
+    .chat-sender { font-size: 0.72rem; font-weight: 700; margin-bottom: 2px; opacity: 0.7; }
+
+    /* ── Doc viewer ──────────────────────────────────────────── */
+    .doc-viewer {
+      background: #ffffff;
+      border: 1.5px solid #dee2e6;
+      border-radius: 14px;
+      min-height: 320px;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 1rem;
+      padding: 2rem;
+    }
+
+    /* ── Join request badge ──────────────────────────────────── */
+    .join-request-badge {
+      background: linear-gradient(135deg, #fff3cd, #ffeeba);
+      border: 1.5px solid #ffc107;
+      border-radius: 12px;
+      padding: 0.8rem 0.9rem;
+      margin: 0.5rem 0;
+      animation: pulseSoft 2s infinite;
+    }
+
+    /* ── Invite link box ─────────────────────────────────────── */
+    .invite-link-box {
+      background: #f8f9fa;
+      border: 1.5px dashed #007bff;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: #004085;
+      word-break: break-all;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    }
+
+    /* ── Nav links ───────────────────────────────────────────── */
+    .nav-link {
+      color: #dee2e6; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; padding: 0.35rem 0.7rem; border-radius: 7px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* ── Section label ───────────────────────────────────────── */
+    .section-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      color: #6c757d; text-transform: uppercase; margin-bottom: 0.6rem;
+    }
+
+    /* ── OTP countdown bar ───────────────────────────────────── */
+    .otp-countdown-wrap {
+      background: #f8f9fa; border: 1px solid #dee2e6;
+      border-radius: 8px; padding: 0.5rem 0.8rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.82rem; color: #495057;
+    }
+    .otp-progress-track {
+      flex: 1; height: 6px; background: #dee2e6;
+      border-radius: 3px; overflow: hidden;
+    }
+    .otp-progress-bar {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #28a745, #007bff);
+      transition: width 1s linear, background 1s;
+    }
+    .otp-progress-bar.expiring { background: linear-gradient(90deg, #dc3545, #ffc107); }
+    .otp-timer-text { font-weight: 700; min-width: 28px; text-align: right; }
+    .otp-timer-text.expiring { color: #dc3545; }
+
+    /* ── Password strength bar ───────────────────────────────── */
+    .pw-strength-track {
+      height: 4px; border-radius: 2px; background: #dee2e6;
+      margin-top: 5px; overflow: hidden;
+    }
+    .pw-strength-bar {
+      height: 100%; border-radius: 2px;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    /* ── Responsive helpers ──────────────────────────────────── */
+    @media (max-width: 640px) {
+      .form-card { padding: 1.8rem 1.2rem; }
+      .workspace-sidebar { width: 0; }
+      .workspace-sidebar.expanded-mobile { width: 100%; position: absolute; right: 0; top: 0; bottom: 0; z-index: 30; }
+      .taskbar { gap: 0.35rem; }
+      .taskbar-btn { min-width: 46px; padding: 0.45rem 0.6rem; font-size: 0.65rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  VIEW 1 – LOG IN                                               -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="view-login" class="view active" style="background:#e9f7fe; align-items:center; justify-content:center; padding:2rem 1rem;">
+  <div class="form-card animate-fade-in-up">
+    <!-- Brand Header Bar inside card -->
+    <div class="brand-bar" style="border-radius:12px 12px 0 0; margin:-2.5rem -2rem 1.5rem; padding:1rem 1.5rem;">
+      <span>🔗 CoLearn</span>
+    </div>
+    <h2 style="font-size:1.5rem; font-weight:700; color:#212529; margin-bottom:1.4rem; text-align:center;">Log In</h2>
+
+    <div id="login-alert" class="hidden" style="margin-bottom:1rem;"></div>
+
+    <div style="display:flex; flex-direction:column; gap:0.9rem;">
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Email or username</label>
+        <input id="login-email" type="text" class="fs-input" placeholder="you@example.com" autocomplete="username" />
+      </div>
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Password</label>
+        <input id="login-password" type="password" class="fs-input" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+    </div>
+
+    <button id="btn-login-submit" class="btn-primary" style="width:100%; margin-top:1.4rem;" onclick="handleLogin()">
+      Submit
+    </button>
+
+    <div style="display:flex; justify-content:space-between; margin-top:1.1rem; font-size:0.87rem;">
+      <span style="color:#6c757d; cursor:pointer;" onclick="navigate('view-signup')">
+        <span style="color:#007bff; font-weight:600;">New user</span>
+      </span>
+      <span style="color:#007bff; font-weight:600; cursor:pointer;" onclick="navigate('view-forgot')">Forgot password</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  VIEW 2 – SIGN UP                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="view-signup" class="view" style="background:#e9f7fe; padding:2rem 1rem;">
+  <div style="width:100%; max-width:480px; margin:0 auto;">
+    <div class="brand-bar" style="border-radius:14px 14px 0 0;">
+      <span>🔗 CoLearn</span>
+    </div>
+    <div class="form-card" style="border-radius:0 0 18px 18px; border-top:none; max-width:100%;">
+      <h2 style="font-size:1.4rem; font-weight:700; color:#212529; margin-bottom:1.5rem;">Create Account</h2>
+
+      <div id="signup-alert" class="hidden" style="margin-bottom:1rem;"></div>
+
+      <div style="display:flex; flex-direction:column; gap:0.9rem;">
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Name</label>
+          <input id="signup-name" type="text" class="fs-input" placeholder="Your full name" />
+        </div>
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Username</label>
+          <input id="signup-username" type="text" class="fs-input" placeholder="@username" />
+        </div>
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Email</label>
+          <input id="signup-email" type="email" class="fs-input" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Mobile</label>
+          <input id="signup-mobile" type="tel" class="fs-input" placeholder="+91 9876543210" />
+        </div>
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Gender</label>
+          <select id="signup-gender" class="fs-input" style="cursor:pointer; appearance:auto;">
+            <option value="" disabled selected>Select gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="nonbinary">Non-binary</option>
+            <option value="prefer-not">Prefer not to say</option>
+          </select>
+        </div>
+        <!-- Password -->
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Password</label>
+          <input id="signup-password" type="password" class="fs-input" placeholder="Min 6 characters" oninput="checkPWStrength()" autocomplete="new-password" />
+          <div class="pw-strength-track"><div class="pw-strength-bar" id="pw-strength-bar" style="width:0%;"></div></div>
+          <span id="pw-strength-label" style="font-size:0.75rem; color:#6c757d; display:block; margin-top:3px;"></span>
+        </div>
+        <!-- Confirm Password -->
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Confirm Password</label>
+          <input id="signup-confirm-password" type="password" class="fs-input" placeholder="Re-enter password" autocomplete="new-password" />
+        </div>
+        <!-- OTP Row -->
+        <div>
+          <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Email OTP Verification</label>
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+            <input id="signup-otp" type="text" class="fs-input" placeholder="Enter 6-digit OTP" maxlength="6" style="flex:1;" />
+            <button class="btn-teal" id="btn-send-otp" style="flex-shrink:0;" onclick="sendOTP()">Send OTP</button>
+          </div>
+          <!-- Countdown row (hidden until OTP is sent) -->
+          <div class="otp-countdown-wrap" id="otp-countdown-wrap" style="display:none;">
+            <span style="white-space:nowrap;">⏱ OTP valid for</span>
+            <div class="otp-progress-track">
+              <div class="otp-progress-bar" id="otp-progress-bar"></div>
+            </div>
+            <span class="otp-timer-text" id="otp-timer-text">60s</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-navy" style="margin-top:1.5rem;" onclick="handleSignup()">Sign up</button>
+      <p style="text-align:center; margin-top:1rem; font-size:0.87rem;">
+        <span style="color:#6c757d;">Already have an account? </span>
+        <span style="color:#007bff; font-weight:600; cursor:pointer;" onclick="navigate('view-login')">Log in</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  VIEW 3 – FORGOT PASSWORD                                      -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="view-forgot" class="view" style="background:#e9f7fe; align-items:center; justify-content:center; padding:2rem 1rem;">
+  <div class="form-card">
+    <div class="brand-bar" style="border-radius:12px 12px 0 0; margin:-2.5rem -2rem 1.5rem; padding:1rem 1.5rem;">
+      <span>🔗 CoLearn</span>
+    </div>
+    <h2 style="font-size:1.4rem; font-weight:700; color:#212529; margin-bottom:0.4rem;">Forgot Password?</h2>
+    <p style="color:#6c757d; font-size:0.87rem; margin-bottom:1.4rem;">Enter your registered email to receive a reset OTP.</p>
+
+    <div id="forgot-alert" class="hidden" style="margin-bottom:1rem;"></div>
+
+    <!-- Step 1: Email input -->
+    <div id="forgot-step1" style="display:flex; flex-direction:column; gap:0.9rem;">
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Linked Email Address</label>
+        <input id="forgot-email" type="email" class="fs-input" placeholder="you@example.com" />
+      </div>
+      <button id="btn-forgot-request" class="btn-primary" onclick="sendResetOTP()">Request Reset Link</button>
+    </div>
+
+    <!-- Step 2: OTP verify (hidden until OTP sent) -->
+    <div id="forgot-step2" style="display:none; flex-direction:column; gap:0.9rem; margin-top:1rem;">
+      <p style="color:#6c757d; font-size:0.85rem; margin:0;">A 6-digit OTP was sent to your email. It expires in <strong>5 minutes</strong>.</p>
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">OTP Code</label>
+        <input id="forgot-otp" type="text" class="fs-input" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric" />
+      </div>
+      <button id="btn-forgot-verify" class="btn-primary" onclick="verifyResetStep()">Verify OTP</button>
+      <p style="text-align:center; font-size:0.83rem; margin-top:0.3rem;">
+        <span style="color:#007bff; font-weight:600; cursor:pointer;" onclick="document.getElementById('forgot-step1').style.display='flex';document.getElementById('forgot-step2').style.display='none';">← Change email / Resend OTP</span>
+      </p>
+    </div>
+
+    <!-- Step 3: New password (hidden until OTP verified) -->
+    <div id="forgot-step3" style="display:none; flex-direction:column; gap:0.9rem; margin-top:1rem;">
+      <p style="color:#6c757d; font-size:0.85rem; margin:0;">OTP verified ✅. Please choose a strong new password.</p>
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">New Password</label>
+        <input id="forgot-newpw" type="password" class="fs-input" placeholder="Min 8 characters" autocomplete="new-password" />
+      </div>
+      <button id="btn-forgot-reset" class="btn-primary" onclick="handleResetPassword()">Reset Password</button>
+    </div>
+
+    <p style="text-align:center; margin-top:1.2rem; font-size:0.87rem;">
+      <span style="color:#007bff; font-weight:600; cursor:pointer;" onclick="navigate('view-login')">← Back to Login</span>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  VIEW 4 – SUITE DASHBOARD                                      -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="view-dashboard" class="view" style="background:#f8f9fa;">
+  <!-- Top Nav -->
+  <div class="brand-bar">
+    <span>🔗 CoLearn</span>
+    <div style="display:flex; gap:0.4rem; align-items:center;">
+      <span class="nav-link" onclick="showAbout()">About us</span>
+      <span class="nav-link" onclick="showProfile()">Profile</span>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div style="flex:1; padding:1.5rem; max-width:1100px; margin:0 auto; width:100%;">
+    <div style="margin-bottom:1.2rem;">
+      <h1 style="font-size:1.6rem; font-weight:800; color:#212529; margin:0;">Welcome back! 👋</h1>
+      <p style="color:#6c757d; font-size:0.9rem; margin-top:4px;">Jump into an existing suite or create a new one.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;" id="dashboard-grid">
+      <!-- LEFT: Existing Suites -->
+      <div class="action-block">
+        <div class="section-label">Open Existing Suite</div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <button class="suite-btn" onclick="openExistingSuite('Study Group Alpha')">
+            <span class="suite-icon">📚</span> Existing Suite 1
+            <span style="margin-left:auto; font-size:0.78rem; color:#6c757d; font-weight:400;">Study Group Alpha</span>
+          </button>
+          <button class="suite-btn" onclick="openExistingSuite('Math Warriors')">
+            <span class="suite-icon">🔢</span> Existing Suite 2
+            <span style="margin-left:auto; font-size:0.78rem; color:#6c757d; font-weight:400;">Math Warriors</span>
+          </button>
+          <button class="suite-btn" onclick="openExistingSuite('Physics Lab')">
+            <span class="suite-icon">⚗️</span> Existing Suite 3
+            <span style="margin-left:auto; font-size:0.78rem; color:#6c757d; font-weight:400;">Physics Lab</span>
+          </button>
+          <button class="suite-btn" onclick="openExistingSuite('CS Project Hub')">
+            <span class="suite-icon">💻</span> Existing Suite 4
+            <span style="margin-left:auto; font-size:0.78rem; color:#6c757d; font-weight:400;">CS Project Hub</span>
+          </button>
+          <button class="suite-btn" onclick="openExistingSuite('Literature Circle')">
+            <span class="suite-icon">📖</span> Existing Suite 5
+            <span style="margin-left:auto; font-size:0.78rem; color:#6c757d; font-weight:400;">Literature Circle</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Action Blocks -->
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        <!-- Create New Suite -->
+        <div class="action-block">
+          <div class="section-label">Create Suite</div>
+          <p style="color:#495057; font-size:0.87rem; margin-bottom:0.9rem;">Set up a permanent collaborative workspace.</p>
+          <button class="btn-primary" style="width:100%;" onclick="openModal('modal-create-suite')">
+            ✨ Create New Suite
+          </button>
+        </div>
+
+        <!-- Quick Suite -->
+        <div class="action-block" style="border-color:#fff3cd;">
+          <div class="section-label" style="color:#856404;">Quick Suite</div>
+          <p style="color:#856404; font-size:0.82rem; margin-bottom:0.9rem; display:flex; align-items:center; gap:0.4rem;">
+            ⚡ <span>Auto-deletes after this session</span>
+          </p>
+          <button onclick="openModal('modal-quick-suite')" style="width:100%; background:linear-gradient(135deg,#ffc107,#d39e00); color:#212529; border:none; border-radius:10px; padding:0.7rem 1.4rem; font-weight:700; cursor:pointer; font-size:0.95rem; box-shadow:0 4px 14px rgba(255,193,7,0.35); transition:all 0.2s;">
+            ⚡ Create Quick Suite
+          </button>
+        </div>
+
+        <!-- Join Suite -->
+        <div class="action-block">
+          <div class="section-label">Join Suite</div>
+          <p style="color:#495057; font-size:0.87rem; margin-bottom:0.9rem;">Enter a suite code or link to join.</p>
+          <div style="display:flex; gap:0.5rem;">
+            <input id="join-suite-code" type="text" class="fs-input" placeholder="Suite code or link" style="flex:1;" />
+            <button class="btn-primary" style="flex-shrink:0;" onclick="handleJoinSuite()">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  VIEW 5 – MODALS (Create Suite & Quick Suite)                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Modal: Create Permanent Suite -->
+<div id="modal-create-suite" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.3rem;">
+      <h3 style="font-size:1.2rem; font-weight:700; color:#212529; margin:0;">✨ Create New Suite</h3>
+      <button onclick="closeModal('modal-create-suite')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6c757d;">✕</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:0.9rem;">
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Suite Name</label>
+        <input id="cs-suite-name" type="text" class="fs-input" placeholder="e.g., Study Group Alpha" />
+      </div>
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:6px;">Private Suite</label>
+        <div class="toggle-wrap">
+          <button class="toggle-track" id="cs-private-toggle" onclick="toggleSwitch('cs-private-toggle', 'cs-private-label')">
+            <div class="toggle-thumb"></div>
+          </button>
+          <span id="cs-private-label" style="font-size:0.87rem; color:#495057; font-weight:500;">No – Public (Direct join)</span>
+        </div>
+        <p id="cs-private-hint" style="color:#6c757d; font-size:0.78rem; margin-top:5px;">Anyone with the link can join directly.</p>
+      </div>
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Invite via Email or Username</label>
+        <input id="cs-invite" type="text" class="fs-input" placeholder="friend@example.com or @username" />
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%; margin-top:1.4rem;" onclick="createSuite('permanent')">Create</button>
+  </div>
+</div>
+
+<!-- Modal: Quick Suite -->
+<div id="modal-quick-suite" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.3rem;">
+      <h3 style="font-size:1.2rem; font-weight:700; color:#212529; margin:0;">⚡ Quick Suite <span style="font-size:0.78rem; color:#856404; background:#fff3cd; padding:2px 8px; border-radius:6px; margin-left:6px;">Temporary</span></h3>
+      <button onclick="closeModal('modal-quick-suite')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6c757d;">✕</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:0.9rem;">
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:4px;">Suite Name</label>
+        <input id="qs-suite-name" type="text" class="fs-input" placeholder="Quick session name" />
+      </div>
+      <div>
+        <label style="font-size:0.85rem; font-weight:600; color:#495057; display:block; margin-bottom:6px;">Access Type</label>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; padding:0.65rem 0.9rem; background:#f8f9fa; border-radius:9px; border:1.5px solid #dee2e6; transition:all 0.2s;" id="qs-opt-public">
+            <input type="radio" name="qs-access" value="public" checked onchange="updateQSOption()" style="accent-color:#007bff;" />
+            <div>
+              <div style="font-weight:600; font-size:0.88rem; color:#212529;">🔓 Direct link join (Public)</div>
+              <div style="font-size:0.77rem; color:#6c757d;">Anyone with the link joins immediately</div>
+            </div>
+          </label>
+          <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; padding:0.65rem 0.9rem; background:#f8f9fa; border-radius:9px; border:1.5px solid #dee2e6; transition:all 0.2s;" id="qs-opt-private">
+            <input type="radio" name="qs-access" value="private" onchange="updateQSOption()" style="accent-color:#007bff;" />
+            <div>
+              <div style="font-weight:600; font-size:0.88rem; color:#212529;">🔒 Admit approval required (Private)</div>
+              <div style="font-size:0.77rem; color:#6c757d;">Host must approve join requests</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+    <button style="width:100%; margin-top:1.4rem; background:linear-gradient(135deg,#ffc107,#d39e00); color:#212529; border:none; border-radius:10px; padding:0.75rem 1.4rem; font-weight:700; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 14px rgba(255,193,7,0.35);" onclick="createSuite('quick')">Create Quick Suite</button>
+  </div>
+</div>
+
+<!-- About Us Modal -->
+<div id="modal-about" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:500px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+      <h3 style="font-size:1.2rem; font-weight:700; color:#212529; margin:0;">🔗 About CoLearn</h3>
+      <button onclick="closeModal('modal-about')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6c757d;">✕</button>
+    </div>
+    <div style="color:#495057; font-size:0.9rem; line-height:1.7;">
+      <p style="margin-bottom:0.8rem;"><strong style="color:#007bff;">CoLearn</strong> is a real-time collaborative study platform designed to help students connect, share resources, and work together — all in one place.</p>
+      <p style="margin-bottom:0.8rem;">✨ Create permanent or temporary study suites<br>📄 Share and annotate documents in real-time<br>🎨 Collaborate on a shared whiteboard<br>💬 Chat and video with your study group<br>☁️ Integrate with Google Drive assets</p>
+      <p style="color:#6c757d; font-size:0.82rem;">Version 1.0.0 · Built for Protothon 2026</p>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="modal-profile" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:380px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+      <h3 style="font-size:1.2rem; font-weight:700; color:#212529; margin:0;">👤 Profile</h3>
+      <button onclick="closeModal('modal-profile')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6c757d;">✕</button>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; padding:1rem; background:#f8f9fa; border-radius:12px; margin-bottom:1rem;">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#007bff,#17a2b8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700;">
+        <span id="profile-initial">U</span>
+      </div>
+      <div>
+        <div style="font-weight:700;color:#212529;" id="profile-name-display">User</div>
+        <div style="color:#6c757d;font-size:0.85rem;" id="profile-email-display">user@example.com</div>
+      </div>
+    </div>
+    <button class="btn-danger" style="width:100%;" onclick="handleLogout()">🚪 Log Out</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  VIEW 6 – ACTIVE SUITE WORKSPACE                               -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="view-workspace" class="view">
+  <!-- Top Bar -->
+  <div class="brand-bar">
+    <span>🔗 CoLearn</span>
+    <span id="ws-suite-name" style="font-size:1rem; font-weight:600; color:#dee2e6; background:rgba(255,255,255,0.1); padding:0.3rem 0.8rem; border-radius:8px; letter-spacing:0.03em;"></span>
+    <div style="display:flex; align-items:center; gap:0.5rem;">
+      <span id="ws-privacy-badge" style="font-size:0.78rem; padding:0.25rem 0.7rem; border-radius:20px; font-weight:600;"></span>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="workspace-body">
+    <!-- Main content area -->
+    <div class="workspace-main" id="ws-main">
+      <!-- State A: Default Invite Area -->
+      <div id="ws-state-invite" style="display:block; animation:fadeIn 0.3s ease;">
+        <!-- Member Info -->
+        <div style="background:#fff; border-radius:14px; border:1.5px solid #dee2e6; padding:1.2rem; margin-bottom:1rem; box-shadow:0 4px 16px rgba(0,0,0,0.05);">
+          <div class="section-label">Suite Members</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+            <div style="background:#f8f9fa; border-radius:9px; padding:0.6rem 0.8rem; font-size:0.85rem; color:#212529;">
+              <span style="font-weight:600;">Alex Johnson</span><br><span style="color:#6c757d; font-size:0.78rem;">@alexj · Host</span>
+            </div>
+            <div style="background:#f8f9fa; border-radius:9px; padding:0.6rem 0.8rem; font-size:0.85rem; color:#212529;">
+              <span style="font-weight:600;">Priya Sharma</span><br><span style="color:#6c757d; font-size:0.78rem;">@priyas</span>
+            </div>
+            <div style="background:#f8f9fa; border-radius:9px; padding:0.6rem 0.8rem; font-size:0.85rem; color:#212529;">
+              <span style="font-weight:600;">Marco Lee</span><br><span style="color:#6c757d; font-size:0.78rem;">@marcol</span>
+            </div>
+            <div id="ws-member4-info" style="display:none; background:#d4edda; border-radius:9px; padding:0.6rem 0.8rem; font-size:0.85rem; color:#212529; border:1px solid #c3e6cb;">
+              <span style="font-weight:600;">Sam Chen</span><br><span style="color:#155724; font-size:0.78rem;">@samchen · Just joined</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invite Link -->
+        <div style="background:#fff; border-radius:14px; border:1.5px solid #dee2e6; padding:1.2rem; margin-bottom:1rem; box-shadow:0 4px 16px rgba(0,0,0,0.05);">
+          <div class="section-label">Invite Link</div>
+          <div class="invite-link-box" id="invite-link-box">
+            <span id="invite-link-text">https://CoLearn.local/join/FS-ABC-7X92</span>
+            <button class="btn-teal" style="flex-shrink:0; padding:0.35rem 0.75rem; font-size:0.8rem;" onclick="copyInviteLink()">📋 Copy</button>
+          </div>
+        </div>
+
+        <!-- Google Drive Integration -->
+        <div style="background:#fff; border-radius:14px; border:1.5px solid #dee2e6; padding:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.8rem;">
+            <div class="section-label" style="margin-bottom:0;">Google Drive Integration</div>
+            <span style="font-size:0.78rem; color:#28a745; font-weight:600; display:flex; align-items:center; gap:4px;">
+              <span style="width:8px;height:8px;background:#28a745;border-radius:50%;display:inline-block;animation:pulseSoft 2s infinite;"></span>
+              Syncing user email asset index
+            </span>
+          </div>
+          <div id="drive-files-list">
+            <div class="drive-folder">
+              <div style="display:flex; align-items:center;">
+                <span class="drive-folder-icon">📄</span>
+                <div>
+                  <div style="font-weight:600; font-size:0.9rem; color:#212529;">PDF Files</div>
+                  <div style="font-size:0.78rem; color:#6c757d;">8 files synced from Drive</div>
+                </div>
+              </div>
+              <button class="btn-outline" onclick="linkDriveFile('PDF', 'Research_Paper_2026.pdf')">🔗 Invite / Link File</button>
+            </div>
+            <div class="drive-folder">
+              <div style="display:flex; align-items:center;">
+                <span class="drive-folder-icon">📝</span>
+                <div>
+                  <div style="font-weight:600; font-size:0.9rem; color:#212529;">DOCX Files</div>
+                  <div style="font-size:0.78rem; color:#6c757d;">12 files synced from Drive</div>
+                </div>
+              </div>
+              <button class="btn-outline" onclick="linkDriveFile('DOCX', 'Lecture_Notes_Ch5.docx')">🔗 Invite / Link File</button>
+            </div>
+            <div class="drive-folder">
+              <div style="display:flex; align-items:center;">
+                <span class="drive-folder-icon">📊</span>
+                <div>
+                  <div style="font-weight:600; font-size:0.9rem; color:#212529;">PPTX Files</div>
+                  <div style="font-size:0.78rem; color:#6c757d;">5 files synced from Drive</div>
+                </div>
+              </div>
+              <button class="btn-outline" onclick="linkDriveFile('PPTX', 'Presentation_Final.pptx')">🔗 Invite / Link File</button>
+            </div>
+            <div class="drive-folder">
+              <div style="display:flex; align-items:center;">
+                <span class="drive-folder-icon">🖼️</span>
+                <div>
+                  <div style="font-weight:600; font-size:0.9rem; color:#212529;">IMG Files</div>
+                  <div style="font-size:0.78rem; color:#6c757d;">23 files synced from Drive</div>
+                </div>
+              </div>
+              <button class="btn-outline" onclick="linkDriveFile('IMG', 'Diagram_Circuit.png')">🔗 Invite / Link File</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State B: Docs Viewer -->
+      <div id="ws-state-docs" style="display:none; animation:fadeIn 0.3s ease;">
+        <!-- Mini video grid at top -->
+        <div style="background:#212529; border-radius:14px; padding:0.8rem; margin-bottom:1rem;">
+          <div class="section-label" style="color:#dee2e6; margin-bottom:0.6rem;">Participants</div>
+          <div class="video-grid">
+            <div class="video-slot">
+              <div class="vid-avatar">A</div>
+              <div class="vid-label">Member 1 · Alex</div>
+            </div>
+            <div class="video-slot">
+              <div class="vid-avatar" style="background:linear-gradient(135deg,#17a2b8,#0f7a8c);">P</div>
+              <div class="vid-label">Member 2 · Priya</div>
+            </div>
+            <div class="video-slot">
+              <div class="vid-avatar" style="background:linear-gradient(135deg,#28a745,#1e7e34);">M</div>
+              <div class="vid-label">Member 3 · Marco</div>
+            </div>
+            <div class="video-slot" id="vid-member4" style="display:none;">
+              <div class="vid-avatar" style="background:linear-gradient(135deg,#ffc107,#d39e00); color:#212529;">S</div>
+              <div class="vid-label">Member 4 · Sam</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document Viewer -->
+        <div class="doc-viewer">
+          <div style="text-align:center;">
+            <div id="doc-type-icon" style="font-size:3.5rem; margin-bottom:0.6rem;">📄</div>
+            <div id="doc-file-name" style="font-size:1.1rem; font-weight:700; color:#212529; margin-bottom:0.3rem;">Document</div>
+            <div style="font-size:0.85rem; color:#6c757d; margin-bottom:1.2rem;" id="doc-file-meta">Loaded from Google Drive</div>
+          </div>
+          <!-- Simulated doc content -->
+          <div id="doc-content-area" style="width:100%; max-width:600px; background:#f8f9fa; border-radius:10px; border:1px solid #dee2e6; padding:1.5rem;">
+            <div style="width:80%; height:12px; background:#dee2e6; border-radius:6px; margin-bottom:0.7rem;"></div>
+            <div style="width:95%; height:12px; background:#dee2e6; border-radius:6px; margin-bottom:0.7rem;"></div>
+            <div style="width:70%; height:12px; background:#dee2e6; border-radius:6px; margin-bottom:1rem;"></div>
+            <div style="width:60%; height:12px; background:#e9f7fe; border-radius:6px; margin-bottom:0.7rem;"></div>
+            <div style="width:90%; height:12px; background:#dee2e6; border-radius:6px; margin-bottom:0.7rem;"></div>
+            <div style="width:85%; height:12px; background:#dee2e6; border-radius:6px; margin-bottom:0.7rem;"></div>
+            <div style="width:50%; height:12px; background:#e9f7fe; border-radius:6px; margin-bottom:1.2rem;"></div>
+            <div style="background:#e9f7fe; border-left:4px solid #007bff; padding:0.8rem; border-radius:0 8px 8px 0; font-size:0.85rem; color:#004085; font-weight:500;">
+              📌 Collaborative annotation: This section discusses the core principles. Members can highlight and comment.
+            </div>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
+            <button class="btn-outline" onclick="changeDocPage(-1)">◀ Previous</button>
+            <span id="doc-page-indicator" style="display:flex; align-items:center; font-size:0.87rem; color:#495057; font-weight:600;">Page 1 of 5</span>
+            <button class="btn-outline" onclick="changeDocPage(1)">Next ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- State C: Whiteboard -->
+      <div id="ws-state-whiteboard" style="display:none; animation:fadeIn 0.3s ease; height:100%;">
+        <div style="background:#fff; border-radius:14px; border:1.5px solid #dee2e6; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+          <div style="background:#212529; padding:0.6rem 1rem; display:flex; align-items:center; justify-content:space-between;">
+            <span style="color:#fff; font-weight:700; font-size:0.95rem;">🎨 Shared Whiteboard</span>
+            <span style="color:#6c757d; font-size:0.8rem;" id="wb-live-indicator">
+              <span style="color:#28a745; font-weight:600;">●</span> Live · 3 members drawing
+            </span>
+          </div>
+          <div style="position:relative; background:#ffffff;">
+            <canvas id="whiteboard-canvas" style="width:100%; display:block;"></canvas>
+          </div>
+          <!-- Whiteboard Toolbar -->
+          <div class="wb-toolbar">
+            <button class="wb-btn active" id="wb-btn-pen" onclick="setWBTool('pen')">
+              ✏️ Pen
+            </button>
+            <button class="wb-btn" id="wb-btn-eraser" onclick="setWBTool('eraser')">
+              🧹 Eraser
+            </button>
+            <input type="color" class="wb-color-picker" id="wb-color" value="#212529" title="Brush color" onchange="updateWBColor(this.value)" />
+            <input type="number" class="wb-size-input" id="wb-size" value="4" min="1" max="40" title="Brush size" onchange="updateWBSize(this.value)" />
+            <div style="width:1px; height:24px; background:#495057; margin:0 4px;"></div>
+            <button class="wb-btn" onclick="wbAction('clear')">🗑️ Clear</button>
+            <button class="wb-btn" onclick="wbAction('new')">📄 New</button>
+            <button class="wb-btn" onclick="wbAction('prev')">◀ Prev</button>
+            <button class="wb-btn" onclick="wbAction('next')">Next ▶</button>
+            <button class="wb-btn" onclick="wbAction('save')">💾 Save</button>
+            <span id="wb-page-label" style="color:#dee2e6; font-size:0.8rem; font-weight:600; margin-left:auto;">Page 1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="workspace-sidebar" id="ws-sidebar">
+      <!-- Sidebar toggle button -->
+      <button class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+        <span id="sidebar-chevron">›</span>
+      </button>
+
+      <div style="padding:0.9rem; border-bottom:1px solid #dee2e6; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+        <span style="font-weight:700; font-size:0.95rem; color:#212529;">Members</span>
+        <button class="btn-teal" style="font-size:0.78rem; padding:0.3rem 0.7rem;" onclick="showInviteModal()">+ Invite</button>
+      </div>
+
+      <div style="flex:1; overflow-y:auto; padding:0.7rem;" id="sidebar-members-list">
+        <!-- Member cards -->
+        <div class="member-card">
+          <div class="member-avatar">A</div>
+          <div>
+            <div style="font-weight:600; font-size:0.85rem; color:#212529;">Alex Johnson</div>
+            <div style="font-size:0.75rem; color:#28a745; font-weight:500;">● Host</div>
+          </div>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#17a2b8,#0f7a8c);">P</div>
+          <div>
+            <div style="font-weight:600; font-size:0.85rem; color:#212529;">Priya Sharma</div>
+            <div style="font-size:0.75rem; color:#6c757d;">● Online</div>
+          </div>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#28a745,#1e7e34);">M</div>
+          <div>
+            <div style="font-weight:600; font-size:0.85rem; color:#212529;">Marco Lee</div>
+            <div style="font-size:0.75rem; color:#6c757d;">● Online</div>
+          </div>
+        </div>
+
+        <!-- Private suite join request -->
+        <div id="join-request-container" style="display:none; margin-top:0.6rem;">
+          <div class="section-label" style="color:#856404;">Pending Request</div>
+          <div class="join-request-badge">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem;">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6c757d,#495057);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.8rem;font-weight:700;">S</div>
+              <div>
+                <div style="font-size:0.84rem; font-weight:700; color:#856404;">Sam Chen</div>
+                <div style="font-size:0.76rem; color:#856404;">@samchen wants to join</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <button class="btn-green-sm" onclick="admitMember()" style="flex:1;">✓ Admit</button>
+              <button class="btn-red-sm" onclick="rejectMember()" style="flex:1;">✕ Reject</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Member 4 (admitted) -->
+        <div class="member-card" id="member4-sidebar-card" style="display:none; border:1px solid #c3e6cb; background:#d4edda;">
+          <div class="member-avatar" style="background:linear-gradient(135deg,#ffc107,#d39e00); color:#212529;">S</div>
+          <div>
+            <div style="font-weight:600; font-size:0.85rem; color:#212529;">Sam Chen</div>
+            <div style="font-size:0.75rem; color:#155724; font-weight:500;">● Just joined</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat fly-out panel -->
+    <div class="chat-panel hidden" id="chat-panel">
+      <div style="padding:0.9rem; border-bottom:1px solid #dee2e6; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:#fff;">
+        <span style="font-weight:700; font-size:0.95rem; color:#212529;">💬 Suite Chat</span>
+        <button onclick="toggleChat()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#6c757d;">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-bubble">
+          <div class="chat-sender">Alex Johnson (Host)</div>
+          Hey everyone! Welcome to the suite 👋
+        </div>
+        <div class="chat-bubble">
+          <div class="chat-sender">Priya Sharma</div>
+          Thanks! Ready to study 📚
+        </div>
+        <div class="chat-bubble">
+          <div class="chat-sender">Marco Lee</div>
+          Let's do this! 💪
+        </div>
+      </div>
+      <div style="padding:0.7rem; border-top:1px solid #dee2e6; background:#fff; flex-shrink:0;">
+        <div style="display:flex; gap:0.5rem;">
+          <input id="chat-input" type="text" class="fs-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChatMessage()" style="flex:1; font-size:0.88rem;" />
+          <button class="btn-primary" style="flex-shrink:0; padding:0.5rem 0.9rem;" onclick="sendChatMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Bottom Taskbar -->
+  <div class="taskbar" id="ws-taskbar">
+    <button class="taskbar-btn" id="btn-mic" onclick="toggleMic()">
+      <span class="taskbar-icon">🎤</span> Mic
+    </button>
+    <button class="taskbar-btn" id="btn-cam" onclick="toggleCam()">
+      <span class="taskbar-icon">📹</span> Cam
+    </button>
+    <div style="width:1px; height:40px; background:#495057;"></div>
+    <button class="taskbar-btn" id="btn-docs" onclick="setWSState('docs')">
+      <span class="taskbar-icon">📄</span> Docs
+    </button>
+    <button class="taskbar-btn" id="btn-whiteboard" onclick="setWSState('whiteboard')">
+      <span class="taskbar-icon">🎨</span> Whiteboard
+    </button>
+    <button class="taskbar-btn" id="btn-chat" onclick="toggleChat()">
+      <span class="taskbar-icon">💬</span> Chat
+    </button>
+    <div style="width:1px; height:40px; background:#495057;"></div>
+    <button class="taskbar-btn" onclick="setWSState('invite')">
+      <span class="taskbar-icon">🏠</span> Home
+    </button>
+    <button class="taskbar-btn leave" onclick="leaveSuite()">
+      <span class="taskbar-icon">🚪</span> Leave
+    </button>
+  </div>
+</div>
+
+<!-- ── Invite from workspace modal ─────────────────────── -->
+<div id="modal-ws-invite" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:380px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+      <h3 style="font-size:1.1rem; font-weight:700; color:#212529; margin:0;">Invite to Suite</h3>
+      <button onclick="closeModal('modal-ws-invite')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6c757d;">✕</button>
+    </div>
+    <input type="text" class="fs-input" placeholder="Email or @username" />
+    <div class="invite-link-box" style="margin-top:0.9rem;">
+      <span style="font-size:0.8rem;">https://CoLearn.local/join/FS-ABC-7X92</span>
+      <button class="btn-teal" style="padding:0.3rem 0.7rem; font-size:0.78rem;" onclick="copyInviteLink()">📋 Copy</button>
+    </div>
+    <button class="btn-primary" style="width:100%; margin-top:1rem;" onclick="closeModal('modal-ws-invite')">Done</button>
+  </div>
+</div>
+
+<!-- Linked file toast -->
+<div id="file-link-toast" style="position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:999; display:none; animation:fadeInUp 0.3s ease;">
+  <div style="background:#212529; color:#fff; padding:0.7rem 1.2rem; border-radius:12px; font-size:0.88rem; font-weight:600; display:flex; align-items:center; gap:0.5rem; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+    <span>☁️</span> <span id="file-link-toast-text"></span>
+  </div>
+</div>
+
+<!-- Copy link toast -->
+<div id="copy-toast" style="position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:999; display:none; animation:fadeInUp 0.3s ease;">
+  <div style="background:#28a745; color:#fff; padding:0.7rem 1.2rem; border-radius:12px; font-size:0.88rem; font-weight:600; box-shadow:0 4px 20px rgba(40,167,69,0.4);">
+    ✓ Invite link copied to clipboard!
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  JAVASCRIPT                                                    -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ─── App state ─────────────────────────────────────────────── */
+let currentUser   = null;
+let currentSuite  = { name: '', isPrivate: false, type: 'permanent' };
+let sidebarOpen   = true;
+let micOn         = true;
+let camOn         = true;
+let chatOpen      = false;
+let currentWBTool = 'pen';
+let wbColor       = '#212529';
+let wbSize        = 4;
+let docPage       = 1;
+const DOC_PAGES   = 5;
+let wbPages       = [null];
+let wbPageIndex   = 0;
+
+// Forgot-password flow state
+let resetEmail       = '';   // email confirmed in step 1
+let resetOtpVerified = false; // true after OTP verified in step 2
+
+/* ─── API helper ─────────────────────────────────────────────── */
+// Derives API base from page origin so LAN devices work automatically.
+const API_BASE = window.location.origin;
+
+async function apiFetch(path, opts = {}) {
+  const url = API_BASE + path;
+  const defaults = { headers: { 'Content-Type': 'application/json' } };
+  try {
+    const res  = await fetch(url, { ...defaults, ...opts, headers: { ...defaults.headers, ...(opts.headers || {}) } });
+    return await res.json();
+  } catch (err) {
+    throw new Error('Cannot connect to server. Check that the backend is running and both devices are on the same Wi-Fi/LAN.');
+  }
+}
+
+/* ─── Router ─────────────────────────────────────────────────── */
+const views = ['view-login','view-signup','view-forgot','view-dashboard','view-workspace'];
+function navigate(viewId) {
+  views.forEach(v => document.getElementById(v).classList.remove('active'));
+  const target = document.getElementById(viewId);
+  target.classList.add('active');
+  if (viewId === 'view-workspace') initWorkspace();
+  if (viewId === 'view-dashboard') updateProfileDisplay();
+}
+
+/* ─── VIEW 1 – LOGIN ─────────────────────────────────────────── */
+async function handleLogin() {
+  const email   = document.getElementById('login-email').value.trim().toLowerCase();
+  const pw      = document.getElementById('login-password').value;
+  const alertEl = document.getElementById('login-alert');
+  const btn     = document.getElementById('btn-login-submit');
+
+  if (!email || !pw) {
+    showAlert(alertEl, 'error', 'Please fill in all fields.');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Logging in…'; }
+
+  try {
+    const data = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body:   JSON.stringify({ email, password: pw }),
+    });
+
+    if (data.success) {
+      currentUser = data.user;
+      alertEl.className = 'hidden';
+      document.getElementById('login-email').value    = '';
+      document.getElementById('login-password').value = '';
+      navigate('view-dashboard');
+    } else {
+      showAlert(alertEl, 'error', data.error || 'Login failed. Please try again.');
+    }
+  } catch (err) {
+    showAlert(alertEl, 'error', '⚠️ ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Submit'; }
+  }
+}
+
+/* ─── VIEW 2 – SIGN UP ───────────────────────────────────────── */
+let otpSent        = false;   // true once the server confirms OTP was dispatched
+let otpExpiry      = 0;       // Unix ms when OTP expires
+let otpTimerHandle = null;    // setInterval handle for countdown
+
+/* ── Password strength meter ─────────────────────────────────── */
+function checkPWStrength() {
+  const pw  = document.getElementById('signup-password').value;
+  const bar = document.getElementById('pw-strength-bar');
+  const lbl = document.getElementById('pw-strength-label');
+  let score = 0;
+  if (pw.length >= 6)                   score++;
+  if (pw.length >= 10)                  score++;
+  if (/[A-Z]/.test(pw))                score++;
+  if (/[0-9]/.test(pw))                score++;
+  if (/[^A-Za-z0-9]/.test(pw))         score++;
+  const levels = [
+    { pct:'0%',   color:'#dee2e6', label:'' },
+    { pct:'25%',  color:'#dc3545', label:'Weak' },
+    { pct:'50%',  color:'#ffc107', label:'Fair' },
+    { pct:'75%',  color:'#17a2b8', label:'Good' },
+    { pct:'100%', color:'#28a745', label:'Strong' },
+  ];
+  const lvl = levels[score] || levels[0];
+  bar.style.width    = lvl.pct;
+  bar.style.background = lvl.color;
+  lbl.textContent   = pw ? lvl.label : '';
+  lbl.style.color   = lvl.color;
+}
+
+/* ── Show error that auto-dismisses after `ms` milliseconds ──── */
+function showTempError(el, msg, ms) {
+  showAlert(el, 'error', msg);
+  setTimeout(() => { el.className = 'hidden'; }, ms);
+}
+
+/* ── OTP countdown UI ────────────────────────────────────────── */
+function startOTPCountdown() {
+  const wrap     = document.getElementById('otp-countdown-wrap');
+  const barEl    = document.getElementById('otp-progress-bar');
+  const timerEl  = document.getElementById('otp-timer-text');
+  const sendBtn  = document.getElementById('btn-send-otp');
+  const totalSec = 60;
+
+  wrap.style.display = 'flex';
+  sendBtn.disabled   = true;
+  sendBtn.style.opacity = '0.5';
+  sendBtn.style.cursor  = 'not-allowed';
+
+  if (otpTimerHandle) clearInterval(otpTimerHandle);
+
+  otpTimerHandle = setInterval(() => {
+    const remaining = Math.max(0, Math.ceil((otpExpiry - Date.now()) / 1000));
+    const pct       = (remaining / totalSec) * 100;
+
+    barEl.style.width = pct + '%';
+    timerEl.textContent = remaining + 's';
+
+    if (remaining <= 15) {
+      barEl.classList.add('expiring');
+      timerEl.classList.add('expiring');
+    } else {
+      barEl.classList.remove('expiring');
+      timerEl.classList.remove('expiring');
+    }
+
+    if (remaining === 0) {
+      clearInterval(otpTimerHandle);
+      otpSent  = false;
+      otpExpiry = 0;
+      wrap.style.display    = 'none';
+      sendBtn.disabled      = false;
+      sendBtn.style.opacity = '1';
+      sendBtn.style.cursor  = 'pointer';
+      sendBtn.textContent   = 'Resend OTP';
+      const alertEl = document.getElementById('signup-alert');
+      showTempError(alertEl, 'OTP expired. Please request a new one.', 3000);
+    }
+  }, 1000);
+}
+
+/* ── Send OTP (calls server API) ─────────────────────────────── */
+async function sendOTP() {
+  const email   = document.getElementById('signup-email').value.trim();
+  const alertEl = document.getElementById('signup-alert');
+  const sendBtn = document.getElementById('btn-send-otp');
+
+  if (!email || !email.includes('@')) {
+    showTempError(alertEl, 'Please enter a valid email address first.', 3000);
+    return;
+  }
+
+  // Loading state
+  sendBtn.disabled    = true;
+  sendBtn.textContent = 'Sending…';
+  sendBtn.style.opacity = '0.6';
+
+  try {
+    const res  = await fetch('/api/send-otp', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      otpSent  = true;
+      otpExpiry = Date.now() + 60000;
+      sendBtn.textContent   = 'Sent ✓';
+      sendBtn.style.opacity = '1';
+      showAlert(alertEl, 'success', `✉️ OTP sent to <strong>${email}</strong>. Check your inbox!`);
+      setTimeout(() => { alertEl.className = 'hidden'; }, 4000);
+      startOTPCountdown();
+    } else {
+      sendBtn.disabled      = false;
+      sendBtn.textContent   = 'Send OTP';
+      sendBtn.style.opacity = '1';
+      sendBtn.style.cursor  = 'pointer';
+      showTempError(alertEl, data.error || 'Failed to send OTP. Try again.', 4000);
+    }
+  } catch (err) {
+    sendBtn.disabled      = false;
+    sendBtn.textContent   = 'Send OTP';
+    sendBtn.style.opacity = '1';
+    sendBtn.style.cursor  = 'pointer';
+    showTempError(alertEl, '⚠️ Could not reach server. Is it running?', 4000);
+  }
+}
+
+/* ── Sign Up handler ─────────────────────────────────────────── */
+async function handleSignup() {
+  const name     = document.getElementById('signup-name').value.trim();
+  const username = document.getElementById('signup-username').value.trim();
+  const email    = document.getElementById('signup-email').value.trim();
+  const mobile   = document.getElementById('signup-mobile').value.trim();
+  const gender   = document.getElementById('signup-gender').value;
+  const password = document.getElementById('signup-password').value;
+  const confirm  = document.getElementById('signup-confirm-password').value;
+  const otp      = document.getElementById('signup-otp').value.trim();
+  const alertEl  = document.getElementById('signup-alert');
+
+  // Basic field check
+  if (!name || !username || !email || !mobile || !gender) {
+    showTempError(alertEl, 'Please fill in all required fields.', 3000);
+    return;
+  }
+
+  // Password presence
+  if (!password) {
+    showTempError(alertEl, 'Please enter a password.', 1000);
+    return;
+  }
+  if (password.length < 6) {
+    showTempError(alertEl, 'Password must be at least 6 characters.', 1000);
+    return;
+  }
+
+  // Password match – auto-disappears after 1 second
+  if (password !== confirm) {
+    showTempError(alertEl, '❌ Passwords do not match. Please try again.', 1000);
+    return;
+  }
+
+  // OTP check
+  if (!otpSent) {
+    showTempError(alertEl, 'Please click [Send OTP] first to verify your email.', 3000);
+    return;
+  }
+  if (!otp) {
+    showTempError(alertEl, 'Please enter the OTP sent to your email.', 3000);
+    return;
+  }
+
+  // Verify OTP via server (using apiFetch helper for LAN compatibility)
+  try {
+    const otpData = await apiFetch('/api/verify-otp', {
+      method:  'POST',
+      body:    JSON.stringify({ email, otp }),
+    });
+
+    if (!otpData.success) {
+      showTempError(alertEl, otpData.error || 'Invalid verification OTP. Please try again.', 3000);
+      return;
+    }
+  } catch (err) {
+    showTempError(alertEl, '⚠️ ' + err.message, 4000);
+    return;
+  }
+
+  // ✅ OTP verified – register user via backend API
+  const regBtn = document.querySelector('button[onclick="handleSignup()"]');
+  if (regBtn) { regBtn.disabled = true; regBtn.textContent = 'Creating account…'; }
+
+  try {
+    const regData = await apiFetch('/api/auth/register', {
+      method: 'POST',
+      body:   JSON.stringify({ name, username, email, password, confirm }),
+    });
+
+    if (!regData.success) {
+      showTempError(alertEl, regData.error || 'Registration failed. Please try again.', 4000);
+      if (regBtn) { regBtn.disabled = false; regBtn.textContent = 'Sign up'; }
+      return;
+    }
+  } catch (err) {
+    showTempError(alertEl, '⚠️ ' + err.message, 4000);
+    if (regBtn) { regBtn.disabled = false; regBtn.textContent = 'Sign up'; }
+    return;
+  }
+
+  if (otpTimerHandle) clearInterval(otpTimerHandle);
+  otpSent  = false;
+  otpExpiry = 0;
+
+  showAlert(alertEl, 'success', '✅ Account created successfully! Redirecting to login…');
+
+  // Clear form
+  ['signup-name','signup-username','signup-email','signup-mobile',
+   'signup-otp','signup-password','signup-confirm-password'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('signup-gender').value = '';
+  document.getElementById('otp-countdown-wrap').style.display = 'none';
+  document.getElementById('pw-strength-bar').style.width = '0%';
+  document.getElementById('pw-strength-label').textContent = '';
+  const sendBtn = document.getElementById('btn-send-otp');
+  sendBtn.disabled    = false;
+  sendBtn.textContent = 'Send OTP';
+  sendBtn.style.opacity = '1';
+  sendBtn.style.cursor  = 'pointer';
+
+  setTimeout(() => navigate('view-login'), 1800);
+}
+
+/* ─── VIEW 3 – FORGOT PASSWORD (3-step real OTP flow) ─────────── */
+
+// Step 1: User enters email → backend checks it exists → sends OTP to THAT email
+async function sendResetOTP() {
+  const email   = document.getElementById('forgot-email').value.trim().toLowerCase();
+  const alertEl = document.getElementById('forgot-alert');
+  const btn     = document.getElementById('btn-forgot-request');
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showAlert(alertEl, 'error', 'Please enter a valid email address.');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+  try {
+    const data = await apiFetch('/api/send-reset-otp', {
+      method: 'POST',
+      body:   JSON.stringify({ email }),
+    });
+
+    if (data.success) {
+      resetEmail       = email;
+      resetOtpVerified = false;
+      showAlert(alertEl, 'success',
+        `✉️ Reset OTP sent to <strong>${escapeHtml(email)}</strong>. Check your inbox!`);
+      setTimeout(() => { alertEl.className = 'hidden'; }, 5000);
+      // Show OTP verify step
+      document.getElementById('forgot-step1').style.display = 'none';
+      document.getElementById('forgot-step2').style.display = 'flex';
+      if (btn) { btn.disabled = false; btn.textContent = 'Resend OTP'; }
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = 'Request Reset Link'; }
+      showAlert(alertEl, 'error', data.error || 'Failed to send OTP.');
+    }
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Request Reset Link'; }
+    showAlert(alertEl, 'error', '⚠️ ' + err.message);
+  }
+}
+
+// Step 2: User enters OTP → backend verifies it
+async function verifyResetStep() {
+  const otp     = document.getElementById('forgot-otp').value.trim();
+  const alertEl = document.getElementById('forgot-alert');
+  const btn     = document.getElementById('btn-forgot-verify');
+
+  if (!otp) {
+    showAlert(alertEl, 'error', 'Please enter the OTP sent to your email.');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+
+  try {
+    const data = await apiFetch('/api/verify-reset-otp', {
+      method: 'POST',
+      body:   JSON.stringify({ email: resetEmail, otp }),
+    });
+
+    if (data.success) {
+      resetOtpVerified = true;
+      showAlert(alertEl, 'success', '✅ OTP verified! Please set your new password.');
+      setTimeout(() => { alertEl.className = 'hidden'; }, 3000);
+      document.getElementById('forgot-step2').style.display = 'none';
+      document.getElementById('forgot-step3').style.display = 'flex';
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = 'Verify OTP'; }
+      showAlert(alertEl, 'error', data.error || 'Invalid OTP. Please try again.');
+    }
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Verify OTP'; }
+    showAlert(alertEl, 'error', '⚠️ ' + err.message);
+  }
+}
+
+// Step 3: User sets new password → backend updates it
+async function handleResetPassword() {
+  const newpw   = document.getElementById('forgot-newpw').value.trim();
+  const alertEl = document.getElementById('forgot-alert');
+  const btn     = document.getElementById('btn-forgot-reset');
+
+  if (!resetOtpVerified) {
+    showAlert(alertEl, 'error', 'Please verify your OTP first.');
+    return;
+  }
+  if (!newpw) {
+    showAlert(alertEl, 'error', 'Please enter a new password.');
+    return;
+  }
+  if (newpw.length < 8) {
+    showAlert(alertEl, 'error', 'Password must be at least 8 characters.');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Updating…'; }
+
+  try {
+    const data = await apiFetch('/api/reset-password', {
+      method: 'POST',
+      body:   JSON.stringify({ email: resetEmail, newPassword: newpw }),
+    });
+
+    if (data.success) {
+      showAlert(alertEl, 'success', '✅ Password updated successfully! Redirecting to login…');
+
+      // Reset all state and form fields
+      resetEmail       = '';
+      resetOtpVerified = false;
+      ['forgot-email','forgot-otp','forgot-newpw'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      // Return to step 1
+      document.getElementById('forgot-step1').style.display = 'flex';
+      document.getElementById('forgot-step2').style.display = 'none';
+      document.getElementById('forgot-step3').style.display = 'none';
+      const reqBtn = document.getElementById('btn-forgot-request');
+      if (reqBtn) { reqBtn.disabled = false; reqBtn.textContent = 'Request Reset Link'; }
+
+      setTimeout(() => {
+        alertEl.className = 'hidden';
+        navigate('view-login');
+      }, 1800);
+    } else {
+      showAlert(alertEl, 'error', data.error || 'Failed to reset password.');
+    }
+  } catch (err) {
+    showAlert(alertEl, 'error', '⚠️ ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Reset Password'; }
+  }
+}
+
+/* ─── VIEW 4 – DASHBOARD ─────────────────────────────────────── */
+function showAbout()   { openModal('modal-about'); }
+function showProfile() { openModal('modal-profile'); }
+
+function updateProfileDisplay() {
+  if (!currentUser) return;
+  document.getElementById('profile-initial').textContent = currentUser.name[0].toUpperCase();
+  document.getElementById('profile-name-display').textContent = currentUser.name;
+  document.getElementById('profile-email-display').textContent = currentUser.email;
+}
+
+function handleLogout() {
+  closeModal('modal-profile');
+  currentUser = null;
+  navigate('view-login');
+}
+
+function openExistingSuite(name) {
+  currentSuite = { name, isPrivate: false, type: 'existing' };
+  navigate('view-workspace');
+}
+
+function handleJoinSuite() {
+  const code = document.getElementById('join-suite-code').value.trim();
+  if (!code) { alert('Please enter a suite code or link.'); return; }
+  currentSuite = { name: 'Joined Suite – ' + code.slice(-6).toUpperCase(), isPrivate: false, type: 'joined' };
+  document.getElementById('join-suite-code').value = '';
+  navigate('view-workspace');
+}
+
+/* ─── VIEW 5 – MODALS ────────────────────────────────────────── */
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function toggleSwitch(trackId, labelId) {
+  const track = document.getElementById(trackId);
+  const label = document.getElementById(labelId);
+  track.classList.toggle('on');
+  const isOn = track.classList.contains('on');
+
+  if (trackId === 'cs-private-toggle') {
+    label.textContent = isOn ? 'Yes – Private (Approval required)' : 'No – Public (Direct join)';
+    document.getElementById('cs-private-hint').textContent = isOn
+      ? '🔒 External users will be held in queue until host approves.'
+      : '🔓 Anyone with the link can join directly.';
+  }
+}
+
+function updateQSOption() {
+  const val = document.querySelector('input[name="qs-access"]:checked').value;
+  ['qs-opt-public','qs-opt-private'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.borderColor = '#dee2e6';
+    el.style.background = '#f8f9fa';
+  });
+  const selectedId = val === 'public' ? 'qs-opt-public' : 'qs-opt-private';
+  const sel = document.getElementById(selectedId);
+  sel.style.borderColor = '#007bff';
+  sel.style.background = '#e9f7fe';
+}
+
+function createSuite(type) {
+  let name, isPrivate;
+  if (type === 'permanent') {
+    name = document.getElementById('cs-suite-name').value.trim() || 'My New Suite';
+    isPrivate = document.getElementById('cs-private-toggle').classList.contains('on');
+    closeModal('modal-create-suite');
+  } else {
+    name = document.getElementById('qs-suite-name').value.trim() || 'Quick Session';
+    const acc = document.querySelector('input[name="qs-access"]:checked').value;
+    isPrivate = (acc === 'private');
+    closeModal('modal-quick-suite');
+  }
+
+  currentSuite = { name, isPrivate, type };
+  navigate('view-workspace');
+}
+
+/* ─── VIEW 6 – WORKSPACE ─────────────────────────────────────── */
+let wsCurrentState = 'invite';
+
+function initWorkspace() {
+  // Set suite name
+  document.getElementById('ws-suite-name').textContent = currentSuite.name || 'Unnamed Suite';
+
+  // Privacy badge
+  const badge = document.getElementById('ws-privacy-badge');
+  if (currentSuite.isPrivate) {
+    badge.textContent = '🔒 Private';
+    badge.style.background = '#fff3cd';
+    badge.style.color = '#856404';
+    // Show join request after 2s
+    setTimeout(() => {
+      document.getElementById('join-request-container').style.display = 'block';
+    }, 2000);
+  } else {
+    badge.textContent = '🔓 Public';
+    badge.style.background = '#d4edda';
+    badge.style.color = '#155724';
+    document.getElementById('join-request-container').style.display = 'none';
+  }
+
+  // Reset states
+  setWSState('invite', true);
+  sidebarOpen = true;
+  document.getElementById('ws-sidebar').classList.remove('collapsed');
+  document.getElementById('sidebar-chevron').textContent = '›';
+
+  // Reset member 4 visibility
+  document.getElementById('ws-member4-info').style.display = 'none';
+  document.getElementById('member4-sidebar-card').style.display = 'none';
+  const vid4 = document.getElementById('vid-member4');
+  if (vid4) vid4.style.display = 'none';
+
+  // Init whiteboard
+  initWhiteboard();
+
+  // Reset taskbar highlights
+  ['btn-docs','btn-whiteboard','btn-chat'].forEach(id => {
+    document.getElementById(id).classList.remove('active-tool');
+  });
+
+  // Close chat
+  chatOpen = false;
+  document.getElementById('chat-panel').classList.add('hidden');
+
+  // Reset mic/cam
+  micOn = true; camOn = true;
+  document.getElementById('btn-mic').classList.remove('muted');
+  document.getElementById('btn-cam').classList.remove('muted');
+  document.getElementById('btn-mic').querySelector('.taskbar-icon').textContent = '🎤';
+  document.getElementById('btn-cam').querySelector('.taskbar-icon').textContent = '📹';
+}
+
+function setWSState(state, silent) {
+  wsCurrentState = state;
+  const states = ['invite','docs','whiteboard'];
+  states.forEach(s => {
+    document.getElementById('ws-state-' + s).style.display = 'none';
+  });
+  document.getElementById('ws-state-' + state).style.display = 'block';
+
+  // Update active tool indicator
+  const toolMap = { docs:'btn-docs', whiteboard:'btn-whiteboard' };
+  ['btn-docs','btn-whiteboard'].forEach(id => document.getElementById(id).classList.remove('active-tool'));
+  if (toolMap[state]) document.getElementById(toolMap[state]).classList.add('active-tool');
+
+  if (state === 'whiteboard' && !silent) {
+    setTimeout(resizeWhiteboard, 100);
+  }
+}
+
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  const sidebar = document.getElementById('ws-sidebar');
+  const chevron = document.getElementById('sidebar-chevron');
+  if (sidebarOpen) {
+    sidebar.classList.remove('collapsed');
+    chevron.textContent = '›';
+  } else {
+    sidebar.classList.add('collapsed');
+    chevron.textContent = '‹';
+  }
+}
+
+function leaveSuite() {
+  if (!confirm('Leave this suite? Your session will end.')) return;
+  navigate('view-dashboard');
+}
+
+/* ─── Mic / Cam ─────────────────────────────────────────────── */
+function toggleMic() {
+  micOn = !micOn;
+  const btn = document.getElementById('btn-mic');
+  const icon = btn.querySelector('.taskbar-icon');
+  if (micOn) {
+    btn.classList.remove('muted');
+    icon.textContent = '🎤';
+  } else {
+    btn.classList.add('muted');
+    icon.textContent = '🔇';
+  }
+}
+
+function toggleCam() {
+  camOn = !camOn;
+  const btn = document.getElementById('btn-cam');
+  const icon = btn.querySelector('.taskbar-icon');
+  if (camOn) {
+    btn.classList.remove('muted');
+    icon.textContent = '📹';
+  } else {
+    btn.classList.add('muted');
+    icon.textContent = '🚫';
+  }
+}
+
+/* ─── Chat ───────────────────────────────────────────────────── */
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const panel = document.getElementById('chat-panel');
+  const btn   = document.getElementById('btn-chat');
+  if (chatOpen) {
+    panel.classList.remove('hidden');
+    btn.classList.add('active-tool');
+  } else {
+    panel.classList.add('hidden');
+    btn.classList.remove('active-tool');
+  }
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const messages = document.getElementById('chat-messages');
+  const bubble   = document.createElement('div');
+  bubble.className = 'chat-bubble own';
+  bubble.innerHTML = `<div class="chat-sender">${currentUser ? currentUser.name : 'You'}</div>${escapeHtml(text)}`;
+  messages.appendChild(bubble);
+  messages.scrollTop = messages.scrollHeight;
+  input.value = '';
+
+  // Simulate reply
+  setTimeout(() => {
+    const replies = [
+      'Got it! 👍',
+      'Makes sense!',
+      'Great point 📝',
+      'Agreed! Let\'s continue.',
+      'Can you explain more?',
+    ];
+    const rb = document.createElement('div');
+    rb.className = 'chat-bubble';
+    rb.innerHTML = `<div class="chat-sender">Priya Sharma</div>${escapeHtml(replies[Math.floor(Math.random()*replies.length)])}`;
+    messages.appendChild(rb);
+    messages.scrollTop = messages.scrollHeight;
+  }, 800 + Math.random() * 1200);
+}
+
+/* ─── Private Suite Admission ────────────────────────────────── */
+function admitMember() {
+  document.getElementById('join-request-container').style.display = 'none';
+  document.getElementById('member4-sidebar-card').style.display = 'flex';
+  document.getElementById('ws-member4-info').style.display = 'block';
+  const vid4 = document.getElementById('vid-member4');
+  if (vid4) vid4.style.display = 'block';
+  showToast('file-link-toast', 'Sam Chen has been admitted to the suite!');
+}
+
+function rejectMember() {
+  document.getElementById('join-request-container').style.display = 'none';
+  showToast('file-link-toast', 'Join request from Sam Chen was rejected.');
+}
+
+/* ─── Google Drive integration ───────────────────────────────── */
+function linkDriveFile(type, filename) {
+  showToast('file-link-toast', `Linked ${type} file: ${filename} from Google Drive`);
+  // Switch to docs view with this file
+  const icons = { PDF:'📄', DOCX:'📝', PPTX:'📊', IMG:'🖼️' };
+  document.getElementById('doc-type-icon').textContent = icons[type] || '📄';
+  document.getElementById('doc-file-name').textContent = filename;
+  document.getElementById('doc-file-meta').textContent = `${type} · Loaded from Google Drive · Syncing…`;
+  setWSState('docs');
+}
+
+/* ─── Doc navigation ─────────────────────────────────────────── */
+function changeDocPage(delta) {
+  docPage = Math.max(1, Math.min(DOC_PAGES, docPage + delta));
+  document.getElementById('doc-page-indicator').textContent = `Page ${docPage} of ${DOC_PAGES}`;
+}
+
+/* ─── Invite link ────────────────────────────────────────────── */
+function copyInviteLink() {
+  const link = document.getElementById('invite-link-text')?.textContent || 'https://CoLearn.local/join/FS-ABC-7X92';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).catch(() => {});
+  }
+  showToast('copy-toast', '');
+}
+
+function showInviteModal() { openModal('modal-ws-invite'); }
+
+/* ─── Toasts ─────────────────────────────────────────────────── */
+function showToast(id, text) {
+  const el = document.getElementById(id);
+  if (text) {
+    const textEl = document.getElementById(id + '-text');
+    if (textEl) textEl.textContent = text;
+  }
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 2800);
+}
+
+/* ─── Alert helper ───────────────────────────────────────────── */
+function showAlert(el, type, msg) {
+  el.className = type === 'success' ? 'alert-success' : 'alert-error';
+  el.innerHTML = msg;
+}
+
+/* ─── HTML escape ────────────────────────────────────────────── */
+function escapeHtml(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   WHITEBOARD ENGINE
+   ════════════════════════════════════════════════════════════════ */
+let wbCanvas, wbCtx;
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+
+function initWhiteboard() {
+  wbCanvas = document.getElementById('whiteboard-canvas');
+  wbCtx    = wbCanvas.getContext('2d');
+  resizeWhiteboard();
+
+  // Pointer events (works for mouse + touch)
+  wbCanvas.addEventListener('pointerdown', onWBDown, { passive: false });
+  wbCanvas.addEventListener('pointermove', onWBMove, { passive: false });
+  wbCanvas.addEventListener('pointerup',   onWBUp);
+  wbCanvas.addEventListener('pointerout',  onWBUp);
+
+  wbPages = [null];
+  wbPageIndex = 0;
+  document.getElementById('wb-page-label').textContent = 'Page 1';
+}
+
+function resizeWhiteboard() {
+  if (!wbCanvas) return;
+  const container = wbCanvas.parentElement;
+  const w = container.clientWidth;
+  const h = Math.max(400, window.innerHeight * 0.5);
+
+  // Save current content
+  let saved = null;
+  if (wbCtx && wbCanvas.width > 0) {
+    try { saved = wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height); } catch(e) {}
+  }
+
+  wbCanvas.width  = w;
+  wbCanvas.height = h;
+  wbCanvas.style.height = h + 'px';
+
+  // Restore or fill white
+  wbCtx.fillStyle = '#ffffff';
+  wbCtx.fillRect(0, 0, w, h);
+  if (saved) {
+    try { wbCtx.putImageData(saved, 0, 0); } catch(e) {}
+  }
+}
+
+function getCanvasPos(e) {
+  const rect = wbCanvas.getBoundingClientRect();
+  const scaleX = wbCanvas.width  / rect.width;
+  const scaleY = wbCanvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top)  * scaleY,
+  };
+}
+
+function onWBDown(e) {
+  e.preventDefault();
+  isDrawing = true;
+  const pos = getCanvasPos(e);
+  lastX = pos.x; lastY = pos.y;
+  wbCtx.beginPath();
+  wbCtx.moveTo(lastX, lastY);
+  // Draw a dot on click
+  applyWBStyle();
+  wbCtx.beginPath();
+  wbCtx.arc(lastX, lastY, (currentWBTool === 'eraser' ? wbSize * 3 : wbSize) / 2, 0, Math.PI * 2);
+  wbCtx.fill();
+}
+
+function onWBMove(e) {
+  if (!isDrawing) return;
+  e.preventDefault();
+  const pos = getCanvasPos(e);
+  applyWBStyle();
+  wbCtx.beginPath();
+  wbCtx.moveTo(lastX, lastY);
+  wbCtx.lineTo(pos.x, pos.y);
+  wbCtx.stroke();
+  lastX = pos.x; lastY = pos.y;
+}
+
+function onWBUp() { isDrawing = false; }
+
+function applyWBStyle() {
+  if (currentWBTool === 'eraser') {
+    wbCtx.globalCompositeOperation = 'destination-out';
+    wbCtx.strokeStyle = 'rgba(0,0,0,1)';
+    wbCtx.fillStyle   = 'rgba(0,0,0,1)';
+    wbCtx.lineWidth   = wbSize * 3;
+  } else {
+    wbCtx.globalCompositeOperation = 'source-over';
+    wbCtx.strokeStyle = wbColor;
+    wbCtx.fillStyle   = wbColor;
+    wbCtx.lineWidth   = wbSize;
+  }
+  wbCtx.lineCap  = 'round';
+  wbCtx.lineJoin = 'round';
+}
+
+function setWBTool(tool) {
+  currentWBTool = tool;
+  ['pen','eraser'].forEach(t => {
+    const btn = document.getElementById('wb-btn-' + t);
+    if (btn) btn.classList.toggle('active', t === tool);
+  });
+}
+
+function updateWBColor(v) { wbColor = v; if(currentWBTool!=='eraser') setWBTool('pen'); }
+function updateWBSize(v)  { wbSize  = parseInt(v) || 4; }
+
+function wbAction(action) {
+  switch(action) {
+    case 'clear':
+      wbCtx.globalCompositeOperation = 'source-over';
+      wbCtx.fillStyle = '#ffffff';
+      wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+      break;
+    case 'new':
+      // Save current page
+      wbPages[wbPageIndex] = wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height);
+      wbPages.push(null);
+      wbPageIndex = wbPages.length - 1;
+      wbCtx.fillStyle = '#ffffff';
+      wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+      document.getElementById('wb-page-label').textContent = `Page ${wbPageIndex + 1}`;
+      break;
+    case 'prev':
+      if (wbPageIndex > 0) {
+        wbPages[wbPageIndex] = wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height);
+        wbPageIndex--;
+        loadWBPage();
+      }
+      break;
+    case 'next':
+      if (wbPageIndex < wbPages.length - 1) {
+        wbPages[wbPageIndex] = wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height);
+        wbPageIndex++;
+        loadWBPage();
+      }
+      break;
+    case 'save':
+      const link = document.createElement('a');
+      link.download = `CoLearn_Whiteboard_Page${wbPageIndex+1}.png`;
+      link.href = wbCanvas.toDataURL('image/png');
+      link.click();
+      break;
+  }
+}
+
+function loadWBPage() {
+  wbCtx.fillStyle = '#ffffff';
+  wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+  if (wbPages[wbPageIndex]) {
+    wbCtx.putImageData(wbPages[wbPageIndex], 0, 0);
+  }
+  document.getElementById('wb-page-label').textContent = `Page ${wbPageIndex + 1}`;
+}
+
+/* ─── Responsive resize ──────────────────────────────────────── */
+window.addEventListener('resize', () => {
+  if (wsCurrentState === 'whiteboard') resizeWhiteboard();
+  if (window.innerWidth < 768) {
+    document.getElementById('dashboard-grid').style.gridTemplateColumns = '1fr';
+  } else {
+    document.getElementById('dashboard-grid').style.gridTemplateColumns = '1fr 1fr';
+  }
+});
+
+/* ─── Keyboard shortcuts ─────────────────────────────────────── */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    ['modal-create-suite','modal-quick-suite','modal-about','modal-profile','modal-ws-invite']
+      .forEach(id => closeModal(id));
+  }
+  if (e.key === 'Enter' && document.getElementById('view-login').classList.contains('active')) {
+    handleLogin();
+  }
+});
+
+/* ─── Close modals on backdrop click ────────────────────────── */
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.add('hidden');
+    }
+  });
+});
+
+/* ─── Init responsive grid ───────────────────────────────────── */
+if (window.innerWidth < 768) {
+  document.getElementById('dashboard-grid').style.gridTemplateColumns = '1fr';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+# Environment files — NEVER commit these
+.env
+backend/.env
+*.env
+
+# Firebase secrets — CRITICAL: never commit
+backend/config/serviceAccountKey.json
+backend/config/*.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
